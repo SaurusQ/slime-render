@@ -1,7 +1,7 @@
 
 CC := g++
-CFLAGS := -Wall -Wextra -I lib/glad/include
-LIBS := -lglfw -lGL
+CFLAGS := -Wall -Wextra -Ilib/glfw/include -I lib/glad/include
+LIBS := -Llib/glfw/lib-mingw-w64 -lglfw3dll -lOpenGL32
 SRC_DIR := src
 BUILD_DIR := build
 TARGET := slime.exe	
