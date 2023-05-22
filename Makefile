@@ -1,12 +1,12 @@
 
 CC := g++
-CFLAGS := -Wall -Wextra -Ilib/glfw/include
+CFLAGS := -Wall -Wextra -Ilib/glfw/include -I lib/glad/include
 LIBS := -Llib/glfw/lib-mingw-w64 -lglfw3dll -lOpenGL32
 SRC_DIR := src
 BUILD_DIR := build
 TARGET := slime.exe	
 
-SRCS := $(wildcard $(SRC_DIR)/*.cpp)
+SRCS := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard lib/glad/src/glad.c)
 OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
 
 all: $(BUILD_DIR)/$(TARGET)
