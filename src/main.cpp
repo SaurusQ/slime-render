@@ -11,6 +11,12 @@ constexpr uint64_t scrHeight = 600;
 
 constexpr char windowName[] = "slime";
 
+void processInput(GLFWwindow *window)
+{
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, true);
+}
+
 int main(void)
 {
     GLFWwindow* window;
@@ -40,16 +46,22 @@ int main(void)
     }
 
     ShaderHandler shaderHandler;
-    shaderHandler.addShader("shaders/fragment.frag");
-    shaderHandler.addShader("shaders/vertex.vert");
+    shaderHandler.addShader("shaders/fragment.frag", GL_FRAGMENT_SHADER);
+    shaderHandler.addShader("shaders/vertex.vert", GL_VERTEX_SHADER);
     shaderHandler.link();
 
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
+        processInput(window);
+
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT);
+
+
+        // rendering
+        shaderHandler.use();
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);

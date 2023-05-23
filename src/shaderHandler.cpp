@@ -14,7 +14,7 @@ ShaderHandler::~ShaderHandler()
     
 }
 
-bool ShaderHandler::addShader(std::string filename)
+bool ShaderHandler::addShader(std::string filename, int shaderType)
 {
     // Load shader from file
     std::ifstream file(filename);
@@ -27,7 +27,7 @@ bool ShaderHandler::addShader(std::string filename)
     // Compile shader
     GLuint shader;
     int success;
-    shader = glCreateShader(GL_VERTEX_SHADER);
+    shader = glCreateShader(shaderType);
     const char* shaderSourcePtr = shaderSource.c_str();
     glShaderSource(shader, 1, &shaderSourcePtr, NULL);
     glCompileShader(shader);
@@ -42,7 +42,7 @@ bool ShaderHandler::addShader(std::string filename)
     
     // Add shader
     glAttachShader(shaderProgram_, shader);
-    shaders_.push_back(shader);
+    glDeleteShader(shader);
     return true;
 }
 
@@ -58,10 +58,9 @@ void ShaderHandler::link()
         std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
         return;
     }
-
-    for (auto s : shaders_)
-    {
-        glDeleteShader(s);
-    }
-
 }
+
+void ShaderHandler::use() 
+{ 
+    glUseProgram(shaderProgram_);
+}  
