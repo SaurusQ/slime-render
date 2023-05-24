@@ -1,9 +1,25 @@
 #include "kernelHeader.cuh"
+#include "image.hpp"
 
 #include <algorithm>
 #include <iostream>
 
-static inline void check(cudaError_t err, const char* context) {
+int main()
+{
+    Image img{};
+
+    while (true)
+    {
+        std::cout << "Image update" << std::endl;
+        img.display();
+        img.randomize();
+    }
+
+    return 0;
+}
+
+
+/*static inline void check(cudaError_t err, const char* context) {
     if (err != cudaSuccess) {
         std::cerr << "CUDA error: " << context << ": "
             << cudaGetErrorString(err) << std::endl;
@@ -20,7 +36,7 @@ int main()
     float* test = new float[2000];
     float* testGPU = nullptr;
 
-    //std::fill(test, test + 2000 * sizeof(float), 0);
+    std::fill(test, test + 2000, 0);
 
 
     //cudaMalloc((void**)&testGPU, 10000 * sizeof(float));
@@ -36,4 +52,4 @@ int main()
     delete[] test; 
 
     return 0;
-}
+}*/
