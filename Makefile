@@ -1,7 +1,7 @@
 
 CC := nvcc
-CFLAGS := -I src
-LIBS :=
+CFLAGS := -I src -I /usr/include/opencv4
+LIBS := `pkg-config --cflags --libs opencv4`
 SRC_DIR := src
 BUILD_DIR := build
 TARGET := slime.exe	
