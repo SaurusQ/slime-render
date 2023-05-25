@@ -1,12 +1,12 @@
 
 CC := nvcc
-CFLAGS := -I src -I /usr/include/opencv4
-LIBS := `pkg-config --cflags --libs opencv4`
+CFLAGS := -I src -I lib/glad/include
+LIBS := -lglfw -lGL
 SRC_DIR := src
 BUILD_DIR := build
 TARGET := slime.exe	
 
-SRCS := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*.cu)
+SRCS := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*.cu) $(wildcard lib/glad/src/glad.c)
 OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
 
 all: $(BUILD_DIR)/$(TARGET)
