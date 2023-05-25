@@ -1,27 +1,20 @@
 #pragma once
 
+#include "definitions.hpp"
+
 #include <inttypes.h>
 #include <memory>
-
-constexpr unsigned int width4k  = 3124;
-constexpr unsigned int height4k = 2130;
-
-struct RGB
-{
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
-};
 
 class Image
 {
 public:
-    Image(unsigned int width = width4k, unsigned int height = height4k);
+    Image(unsigned int width = W_4K, unsigned int height = H_4K);
     ~Image();
     void randomize();
     const RGB* getPtr() const { return imagePtr_.get(); }
     unsigned int getWidth() const { return width_; }
     unsigned int getHeight() const { return height_; }
+    unsigned int getBufferSize() const { return pixels_ * sizeof(RGB); }
 private:
     unsigned int width_;
     unsigned int height_;
