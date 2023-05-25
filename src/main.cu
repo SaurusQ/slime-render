@@ -1,15 +1,14 @@
 #include "kernelHeader.cuh"
 #include "image.hpp"
+#include "imageKernel.cuh"
 #include "shaderHandler.hpp"
+#include "definitions.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 #include <algorithm>
 #include <iostream>
-
-constexpr uint64_t scrWidth = 800;
-constexpr uint64_t scrHeight = 600;
 
 constexpr char wndName[] = "slime";
 
@@ -46,7 +45,7 @@ int main()
         return -1;
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(scrWidth, scrHeight, wndName, NULL, NULL);
+    window = glfwCreateWindow(W_4K, H_4K, wndName, NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -112,7 +111,7 @@ int main()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     // Create texture data (4-component unsigned byte)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, scrWidth, scrHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, W_4K, H_4K, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     // Unbind the texture
     glBindTexture(GL_TEXTURE_2D, texture);
 
@@ -132,6 +131,7 @@ int main()
     //glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer );
 
     Image img{};
+    ImageKernel imgKernel{img};
     img.randomize();
 
     /* Loop until the user closes the window */
@@ -143,7 +143,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         img.randomize();
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, scrWidth, scrHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, img.getPtr());
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, W_4K, H_4K, 0, GL_RGB, GL_UNSIGNED_BYTE, img.getPtr());
         glGenerateMipmap(GL_TEXTURE_2D);
 
         glActiveTexture(GL_TEXTURE0);
