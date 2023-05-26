@@ -67,7 +67,7 @@ bool ImageKernel::checkCudaError(cudaError_t ce, std::string msg) const
 
 void ImageKernel::imgToPadded()
 {
-    <<<TODO>>>k_imgToPadded(imageGPUptr_, imageGPUpaddedPtr_);
+    //k_imgToPadded<<<TODO>>>(imageGPUptr_, imageGPUpaddedPtr_);
 }
 
 void ImageKernel::convolution(unsigned int kernelSize, const std::vector<float>& kernel)
@@ -102,7 +102,7 @@ void ImageKernel::convolution(unsigned int kernelSize, const std::vector<float>&
         cudaMalloc((void**)&kernelGPUptr, kernelValues * sizeof(float)),
         "cudaMalloc kernelGPUptr"
     );
-    <<<height_, width_>>>k_convolution(imageGPUptr_, imageGPUpaddedPtr_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, width_);
+    k_convolution<<<height_, width_>>>(imageGPUptr_, imageGPUpaddedPtr_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, width_);
     cudaFree(relativeIdxsGPUptr);
     cudaFree(kernelGPUptr);
 }
