@@ -8,10 +8,11 @@
 class Image
 {
 public:
-    Image(unsigned int width = W_4K, unsigned int height = H_4K);
+    Image(unsigned int width, unsigned int height);
     ~Image();
     void randomize();
     void drawCircle(unsigned int x, unsigned int y, unsigned int radius, RGB rgb);
+    void colorOneByOne();
     const RGB* getPtr() const { return imagePtr_.get(); }
     unsigned int getWidth() const { return width_; }
     unsigned int getHeight() const { return height_; }

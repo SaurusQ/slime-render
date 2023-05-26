@@ -31,14 +31,27 @@ void Image::randomize()
 
 }
 
-void Image::drawCircle(unsigned int x, unsigned int y, unsigned int radius, RGB rgb)
+void Image::drawCircle(unsigned int cx, unsigned int cy, unsigned int radius, RGB rgb)
 {
     unsigned int r2 = radius * radius;
     for (int y = 0; y < height_; y++)
     {
         for (int x = 0; x < width_; x++)
         {
-            if(r2 >= x * x + y * y) imagePtr_[x + y * width_] = rgb;
+            int dx = cx -x;
+            int dy = cy -y;
+            if(r2 >= dx * dx + dy * dy) imagePtr_[x + y * width_] = rgb;
         }
+    }
+}
+
+void Image::colorOneByOne()
+{
+    static unsigned int idx = 0;
+    imagePtr_[idx].b = 255;
+    idx++;
+    if (idx == pixels_)
+    {
+        idx = 0;
     }
 }

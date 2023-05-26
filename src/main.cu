@@ -130,9 +130,9 @@ int main()
     //glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0 );
     //glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer );
 
-    Image img{};
-    ImageKernel imgKernel{img};
-    img.randomize();
+    Image img{W_4K, H_4K};
+    ImageKernel imgKernel{img, 100};
+    img.drawCircle(400, 200, 50 , RGB{255, 0, 0});
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -142,7 +142,7 @@ int main()
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        img.randomize();
+
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, W_4K, H_4K, 0, GL_RGB, GL_UNSIGNED_BYTE, img.getPtr());
         glGenerateMipmap(GL_TEXTURE_2D);
 
