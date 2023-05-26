@@ -11,11 +11,12 @@ public:
     Image(unsigned int width = W_4K, unsigned int height = H_4K);
     ~Image();
     void randomize();
+    void drawCircle(unsigned int x, unsigned int y, unsigned int radius, RGB rgb);
     const RGB* getPtr() const { return imagePtr_.get(); }
     unsigned int getWidth() const { return width_; }
     unsigned int getHeight() const { return height_; }
     unsigned int getBufferSize() const { return pixels_ * sizeof(RGB); }
-    unsigned int getPaddedBufferSize(unsigned int padding) { return (width_ + padding) * (height_ + padding) * sizeof(RGB); }
+    unsigned int getPaddedBufferSize(unsigned int padding) const { return (width_ + padding) * (height_ + padding) * sizeof(RGB); }
 private:
     unsigned int width_;
     unsigned int height_;
