@@ -1,6 +1,7 @@
 #include "image.hpp"
 
 #include <random>
+#include <math.h>
 
 Image::Image(unsigned int width, unsigned int heigth)
     : width_(width), height_(heigth)
@@ -28,4 +29,16 @@ void Image::randomize()
         imagePtr_[i].b = dist(rng);
     }
 
+}
+
+void Image::drawCircle(unsigned int x, unsigned int y, unsigned int radius, RGB rgb)
+{
+    unsigned int r2 = radius * radius;
+    for (int y = 0; y < height_; y++)
+    {
+        for (int x = 0; x < width_; x++)
+        {
+            if(r2 >= x * x + y * y) imagePtr_[x + y * width_] = rgb;
+        }
+    }
 }

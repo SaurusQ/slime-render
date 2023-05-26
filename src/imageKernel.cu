@@ -1,4 +1,5 @@
 #include "imageKernel.cuh"
+#include "imgKernels.cuh"
 
 #include <iostream>
 #include <stdexcept>
@@ -8,7 +9,7 @@ ImageKernel::ImageKernel(const Image& img, unsigned int padding)
     width_              = img.getWidth();
     height_             = img.getHeight();
     bufferSize_         = img.getBufferSize();
-    bufferSizePadded_   = img.getPaddedBufferSize();
+    bufferSizePadded_   = img.getPaddedBufferSize(padding);
 
     this->checkCudaError(
         cudaMalloc((void**)&imageGPUptr_, bufferSize_),
@@ -40,7 +41,7 @@ void ImageKernel::update(const Image& img)
         return;
     }
     this->checkCudaError(
-        cudaMemcpy(imageGPUptr_, img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
+        cudaMemcpy((void*)imageGPUptr_, (void*)img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
         "cudaMemcpy"
     );
 }
@@ -48,17 +49,17 @@ void ImageKernel::update(const Image& img)
 void ImageKernel::readBack(const Image& img) const
 {
     this->checkCudaError(
-        cudaMemcpy(img.getPtr(), imageGPUptr_, bufferSize_, cudaMemcpyDeviceToHost),
+        cudaMemcpy((void*)img.getPtr(), (void*)imageGPUptr_, bufferSize_, cudaMemcpyDeviceToHost),
         "cudaMemcpy"
     );
 }
 
-bool ImageKernel::checkCudaError(cudaStatus cs, std::string msg) const
+bool ImageKernel::checkCudaError(cudaError_t ce, std::string msg) const
 {
-    bool failure = cs != cudaSuccess;
+    bool failure = ce != cudaSuccess;
     if(failure)
     {
-        msg = std::string("FAIL: ") + msg + std::string(" WHAT: ") + std::string(cudaGetErrorString(cudaStatus));
+        msg = std::string("FAIL: ") + msg + std::string(" WHAT: ") + std::string(cudaGetErrorString(ce));
         throw std::runtime_error(msg);
     }
     return failure;
@@ -69,17 +70,12 @@ void ImageKernel::imgToPadded()
     <<<TODO>>>k_imgToPadded(imageGPUptr_, imageGPUpaddedPtr_);
 }
 
-__global__ ImageKernel::k_imgToPadded(RGB* imgPtr, RGB* imgPadPtr, unsigned int padding, unsigned int width, unsigned int height)
-{
-
-}
-
 void ImageKernel::convolution(unsigned int kernelSize, const std::vector<float>& kernel)
 {
     unsigned int kernelValues = (kernelSize * 2 + 1) * (kernelSize * 2 + 1);
-    if(kernelSize > padding) 
+    if(kernelSize > padding_) 
     {
-        std::cerr << "Too large kernel size for padding. Kernel: " << kernelSize << " Padding: " << padding << std::endl;
+        std::cerr << "Too large kernel size for padding. Kernel: " << kernelSize << " Padding: " << padding_ << std::endl;
         return; 
     }
     if(kernel.size() < kernelValues)
@@ -93,7 +89,7 @@ void ImageKernel::convolution(unsigned int kernelSize, const std::vector<float>&
     {
         for (int x = -kernelSize; x <= kernelSize; x++)
         {
-            relativeIdxs.append(x + y * width_);
+            relativeIdxs.push_back(x + y * width_);
         }
     }
     int* relativeIdxsGPUptr = nullptr;
@@ -106,29 +102,7 @@ void ImageKernel::convolution(unsigned int kernelSize, const std::vector<float>&
         cudaMalloc((void**)&kernelGPUptr, kernelValues * sizeof(float)),
         "cudaMalloc kernelGPUptr"
     );
-    <<<TODO>>>k_convolution(imageGPUptr_, imageGPUpaddedPtr_, relativeIdxsGPUptr, kernelGPUptr, kernelValues);
-}
-
-__global__ ImageKernel::k_convolution(RGB* img, RGB* imgPadded, int* relativeIdxs, float* kernel, unsigned int kernelValues, unsigned int width, unsigned int height)
-{
-    int x = threadIdx.x;
-    int y = blockIdx.x;
-
-    int idx = x + y * width; 
-
-    float valueR = 0;
-    float valueG = 0;
-    float valueB = 0;
-
-    for (int i = 0; i < kernelValues; i++)
-    {
-        valueR += imgPadded[relativeIdxs[i]].r * kernel[i];
-        valueG += imgPadded[relativeIdxs[i]].g * kernel[i];
-        valueB += imgPadded[relativeIdxs[i]].b * kernel[i];
-    }    
-
-    img[idx].r = valueR / kernelValues;
-    img[idx].g = valueG / kernelValues;
-    img[idx].b = valueb / kernelValues;
-    
+    <<<height_, width_>>>k_convolution(imageGPUptr_, imageGPUpaddedPtr_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, width_);
+    cudaFree(relativeIdxsGPUptr);
+    cudaFree(kernelGPUptr);
 }

@@ -4,6 +4,7 @@
 #include "definitions.hpp"
 
 #include <cuda_runtime.h>
+#include <vector>
 
 class ImageKernel
 {
@@ -13,13 +14,12 @@ public:
     void update(const Image& img);
     void readBack(const Image& img) const;
     // Kernel starters
-    void imgToPadded();
-    void convolution(const std::vector<float>& kernel, unsigned int kernelSize);
+    void convolution(unsigned int kernelSize, const std::vector<float>& kernel);
 private:
-    bool checkCudaError(cudaStatus cs, std::string msg) const;
-    // Kernels
-    __global__ k_imgToPadded(RGB* imgPtr, RGB* imgPadPtr, unsigned int padding = padding_, unsigned int width = width_, unsigned int height = height_);
-    __global__ k_convolution(RGB* imgPtr, int* relativeIdxs, float* kernel, unsigned int kernelValues, unsigned int width = width_, unsigned int height = height_);
+    bool checkCudaError(cudaError_t cs, std::string msg) const;
+    // Kernel starters
+    void imgToPadded();
+
     RGB* imageGPUptr_;
     RGB* imageGPUpaddedPtr_;
     unsigned int width_;
