@@ -20,7 +20,7 @@ void Image::randomize()
 {
     std::random_device rd;
     std::mt19937 rng(rd());
-    std::uniform_int_distribution<int> dist(0, 255);
+    std::uniform_real_distribution<float> dist(0.0, 1.0);
 
     for (int i = 0; i < pixels_; i++)
     {
@@ -48,7 +48,7 @@ void Image::drawCircle(unsigned int cx, unsigned int cy, unsigned int radius, RG
 void Image::colorOneByOne()
 {
     static unsigned int idx = 0;
-    imagePtr_[idx].b = 255;
+    imagePtr_[idx].b = 1.0;
     idx++;
     if (idx == pixels_)
     {

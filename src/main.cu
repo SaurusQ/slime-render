@@ -1,4 +1,3 @@
-#include "kernelHeader.cuh"
 #include "image.hpp"
 #include "imageKernel.cuh"
 #include "shaderHandler.hpp"
@@ -101,19 +100,8 @@ int main()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    // Texture
-    GLuint texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-    // set basic parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    // Create texture data (4-component unsigned byte)
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, W_4K, H_4K, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    // Unbind the texture
-    glBindTexture(GL_TEXTURE_2D, texture);
+    
+
 
     // Depth buffer
     //GLuint depthBuffer;
@@ -132,6 +120,7 @@ int main()
 
     Image img{W_4K, H_4K};
     ImageKernel imgKernel{img, 100};
+    GLuint texture = imgKernel.getTexture();
     img.drawCircle(400, 200, 50 , RGB{255, 0, 0});
 
     /* Loop until the user closes the window */

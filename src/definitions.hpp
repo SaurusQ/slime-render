@@ -7,7 +7,7 @@ constexpr unsigned int H_4K = 2160;
 
 struct RGB
 {
-    uint8_t r;
-    uint8_t g;
-    uint8_t b;
+    float r;
+    float g;
+    float b;
 };

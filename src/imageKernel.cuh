@@ -4,6 +4,7 @@
 #include "definitions.hpp"
 
 #include <cuda_runtime.h>
+#include <glad/glad.h>
 #include <vector>
 
 class ImageKernel
@@ -11,14 +12,21 @@ class ImageKernel
 public:
     ImageKernel(const Image& img, unsigned int padding);
     ~ImageKernel();
+    void activateCuda();
+    void deactivateCuda();
     void update(const Image& img);
     void readBack(const Image& img) const;
+    GLuint getTexture() const { return texture_; };
     // Kernel starters
     void convolution(unsigned int kernelSize, const std::vector<float>& kernel);
 private:
+    void loadTexture();
     bool checkCudaError(cudaError_t cs, std::string msg) const;
     // Kernel starters
     void imgToPadded();
+
+    cudaGraphicsResource_t* cudaTextureResource_ = nullptr;
+    GLuint texture_ = 0;
 
     RGB* imageGPUptr_;
     RGB* imageGPUpaddedPtr_;
