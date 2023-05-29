@@ -13,22 +13,26 @@ ImageKernel::ImageKernel(const Image& img, unsigned int padding)
     bufferSize_         = img.getBufferSize();
     bufferSizePadded_   = img.getPaddedBufferSize(padding);
 
-    this->loadTexture();
+    this->checkCudaError(
+        cudaMalloc((void**)&imageGPUptr_, bufferSize_),
+        "cudaMalloc image buffer"
+    );
     this->checkCudaError(
         cudaMalloc((void**)&imageGPUpaddedPtr_, bufferSizePadded_),
-        "cudaMallow padded image buffer"
+        "cudaMalloc padded image buffer"
     );
     this->checkCudaError(
         cudaMemset(imageGPUpaddedPtr_, 0, bufferSizePadded_),
         "cudaMemset"
     );
+    this->loadTexture();
     this->update(img);
 }
 
 ImageKernel::~ImageKernel()
 {
     cudaFree(imageGPUptr_);
-    cudaGraphicsUnregisterResource(*cudaTextureResource_);
+    cudaGraphicsUnregisterResource(cudaTextureResource_);
     glDeleteTextures(1, &texture_);
 }
 
@@ -36,7 +40,7 @@ void ImageKernel::activateCuda()
 {
     if (cudaTextureResource_ != nullptr)
     {
-        cudaGraphicsMapResources(1, cudaTextureResource_);
+        cudaGraphicsMapResources(1, &cudaTextureResource_);
     }
 }
 
@@ -44,7 +48,7 @@ void ImageKernel::deactivateCuda()
 {
     if (cudaTextureResource_ != nullptr)
     {
-        cudaGraphicsUnmapResources(1, cudaTextureResource_);
+        cudaGraphicsUnmapResources(1, &cudaTextureResource_);
     }
 }
 
@@ -57,8 +61,10 @@ void ImageKernel::update(const Image& img)
         return;
     }
     this->checkCudaError(
-        cudaMemcpy((void*)imageGPUptr_, (void*)img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
-        "cudaMemcpy"
+        cudaMemcpy2DToArray((cudaArray_t)imageGPUptr_, 0, 0, (void*)img.getPtr(), width_ * sizeof(RGB), width_, height_, cudaMemcpyHostToDevice),
+        // ((cudaArray_t)imageGPUptr_, 0, 0, (void*)img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
+        //cudaMemcpy((void*)imageGPUptr_, (void*)img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
+        "cudaMemcpy update()"
     );
 }
 
@@ -66,7 +72,7 @@ void ImageKernel::readBack(const Image& img) const
 {
     this->checkCudaError(
         cudaMemcpy((void*)img.getPtr(), (void*)imageGPUptr_, bufferSize_, cudaMemcpyDeviceToHost),
-        "cudaMemcpy"
+        "cudaMemcpy readback()"
     );
 }
 
@@ -82,27 +88,29 @@ void ImageKernel::loadTexture()
     // Create texture data (4-component unsigned byte)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width_, height_, 0, GL_RGB, GL_FLOAT, NULL);
     // Unbind the texture
-    glBindTexture(GL_TEXTURE_2D, texture_);
+    //glBindTexture(GL_TEXTURE_2D, texture_);
+
+    std::cout << "texture loaded" << std::endl;
 
     // Register the texture with cuda
+    std::cout << "cudaGraphicsGLRegisterImage" << std::endl;
     this->checkCudaError(
-        cudaGraphicsGLRegisterImage((cudaGraphicsResource**)&cudaTextureResource_, texture_, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsWriteDiscard),
+        cudaGraphicsGLRegisterImage(&cudaTextureResource_, texture_, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsWriteDiscard),
         "cudaGraphicsGLRegisterImage"
-    );
+    );  
     // cuda device pointer from cuda graphics resource
+    std::cout << "cudaGraphicsMapResources" << std::endl;
     this->checkCudaError(
-        cudaGraphicsMapResources(1, cudaTextureResource_),
+        cudaGraphicsMapResources(1, &cudaTextureResource_),
         "cudaGraphicsMapResources"
     );
 
-    size_t cudaSize;
+    std::cout << "cudaGraphicsSubResourceGetMappedArray" << std::endl;
     this->checkCudaError(
-        cudaGraphicsResourceGetMappedPointer((void**)&imageGPUptr_, &cudaSize, *cudaTextureResource_),
+        //cudaGraphicsResourceGetMappedPointer((void**)&imageGPUptr_, &cudaSize, cudaTextureResource_),
+        cudaGraphicsSubResourceGetMappedArray((cudaArray_t*)&imageGPUptr_, cudaTextureResource_, 0, 0),
         "cudaGraphicsSubResourceGetMappedArray"
     );
-
-    std::cout << "Got cuda size: " << cudaSize << std::endl;
-    std::cout << "Actual cuda size: " << bufferSize_ << std::endl;
 }
 
 bool ImageKernel::checkCudaError(cudaError_t ce, std::string msg) const
