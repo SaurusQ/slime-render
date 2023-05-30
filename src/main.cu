@@ -122,8 +122,6 @@ int main()
     ImageKernel imgKernel{img, 100};
     GLuint texture = imgKernel.getTexture();
     img.drawCircle(400, 200, 50 , RGB{255, 0, 0});
-    img.randomize();
-    imgKernel.update(img);
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -133,12 +131,14 @@ int main()
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        img.randomize();
+        imgKernel.update(img);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, W_4K, H_4K, 0, GL_RGB, GL_UNSIGNED_BYTE, img.getPtr());
-        glGenerateMipmap(GL_TEXTURE_2D);
+        //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, W_4K, H_4K, 0, GL_RGB, GL_UNSIGNED_BYTE, img.getPtr());
+        //glGenerateMipmap(GL_TEXTURE_2D);
 
-        glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture);
+        glActiveTexture(GL_TEXTURE0);
 
         // Render a textured quad that covers the entire window
         shaderHandler.use();
