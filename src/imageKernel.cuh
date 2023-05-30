@@ -26,11 +26,10 @@ private:
     void imgToPadded();
 
     cudaGraphicsResource_t cudaTextureResource_ = nullptr;
-    cudaArray_t cudaArray_;
+    cudaArray_t imgCudaArray_ = nullptr;
+    cudaArray_t imgPadCudaArray_ = nullptr;
     GLuint texture_ = 0;
 
-    RGB* imageGPUptr_;
-    RGB* imageGPUpaddedPtr_;
     unsigned int width_;
     unsigned int height_;
     unsigned int bufferSize_;
