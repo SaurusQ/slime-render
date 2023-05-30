@@ -61,11 +61,12 @@ void ImageKernel::update(const Image& img)
         return;
     }
     this->checkCudaError(
-        cudaMemcpy2DToArray(cudaArray_, 0, 0, (void*)img.getPtr(), width_ * sizeof(RGB), width_, height_, cudaMemcpyHostToDevice),
+        cudaMemcpy2DToArray(cudaArray_, 0, 0, (void*)img.getPtr(), width_ * sizeof(RGB), width_ * sizeof(RGB), height_, cudaMemcpyHostToDevice),
         // ((cudaArray_t)imageGPUptr_, 0, 0, (void*)img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
         //cudaMemcpy((void*)imageGPUptr_, (void*)img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
         "cudaMemcpy update()"
     );
+    cudaDeviceSynchronize();
 }
 
 void ImageKernel::readBack(const Image& img) const
@@ -111,6 +112,7 @@ void ImageKernel::loadTexture()
         cudaGraphicsSubResourceGetMappedArray(&cudaArray_, cudaTextureResource_, 0, 0),
         "cudaGraphicsSubResourceGetMappedArray"
     );
+    cudaDeviceSynchronize();
 }
 
 bool ImageKernel::checkCudaError(cudaError_t ce, std::string msg) const
