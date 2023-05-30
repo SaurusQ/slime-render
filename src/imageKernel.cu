@@ -61,7 +61,7 @@ void ImageKernel::update(const Image& img)
         return;
     }
     this->checkCudaError(
-        cudaMemcpy2DToArray((cudaArray_t)imageGPUptr_, 0, 0, (void*)img.getPtr(), width_ * sizeof(RGB), width_, height_, cudaMemcpyHostToDevice),
+        cudaMemcpy2DToArray(cudaArray_, 0, 0, (void*)img.getPtr(), width_ * sizeof(RGB), width_, height_, cudaMemcpyHostToDevice),
         // ((cudaArray_t)imageGPUptr_, 0, 0, (void*)img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
         //cudaMemcpy((void*)imageGPUptr_, (void*)img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
         "cudaMemcpy update()"
@@ -108,7 +108,7 @@ void ImageKernel::loadTexture()
     std::cout << "cudaGraphicsSubResourceGetMappedArray" << std::endl;
     this->checkCudaError(
         //cudaGraphicsResourceGetMappedPointer((void**)&imageGPUptr_, &cudaSize, cudaTextureResource_),
-        cudaGraphicsSubResourceGetMappedArray((cudaArray_t*)&imageGPUptr_, cudaTextureResource_, 0, 0),
+        cudaGraphicsSubResourceGetMappedArray(&cudaArray_, cudaTextureResource_, 0, 0),
         "cudaGraphicsSubResourceGetMappedArray"
     );
 }
