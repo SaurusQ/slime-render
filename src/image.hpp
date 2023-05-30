@@ -17,7 +17,7 @@ public:
     unsigned int getWidth() const { return width_; }
     unsigned int getHeight() const { return height_; }
     unsigned int getBufferSize() const { return pixels_ * sizeof(RGB); }
-    unsigned int getPaddedBufferSize(unsigned int padding) const { return (width_ + padding) * (height_ + padding) * sizeof(RGB); }
+    unsigned int getPaddedBufferSize(unsigned int padding) const { return (width_ + padding * 2) * (height_ + padding * 2) * sizeof(RGB); }
 private:
     unsigned int width_;
     unsigned int height_;

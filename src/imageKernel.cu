@@ -7,31 +7,44 @@
 #include <stdexcept>
 
 ImageKernel::ImageKernel(const Image& img, unsigned int padding)
+    : padding_(padding)
 {
     width_              = img.getWidth();
     height_             = img.getHeight();
     bufferSize_         = img.getBufferSize();
-    bufferSizePadded_   = img.getPaddedBufferSize(padding);
+    bufferSizePadded_   = img.getPaddedBufferSize(padding_);
 
+    const cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(32, 32, 32, 32, cudaChannelFormatKindFloat);
     this->checkCudaError(
-        cudaMalloc((void**)&imageGPUptr_, bufferSize_),
-        "cudaMalloc image buffer"
+        cudaMallocArray(&imgPadCudaArray_, &channelDesc, width_ + padding_ * 2, height_ + padding_ * 2),
+        "cudaMallocArray for imgPadCudaArray_"
     );
-    this->checkCudaError(
-        cudaMalloc((void**)&imageGPUpaddedPtr_, bufferSizePadded_),
-        "cudaMalloc padded image buffer"
-    );
-    this->checkCudaError(
+
+    /*this->checkCudaError(
         cudaMemset(imageGPUpaddedPtr_, 0, bufferSizePadded_),
         "cudaMemset"
-    );
+    );*/
     this->loadTexture();
     this->update(img);
+
+    /*cudaChannelFormatDesc channelDesc;
+
+    // Retrieve the channel format description from the cudaArray
+    cudaGetChannelDesc(&channelDesc, imgCudaArray_);
+
+    // Print the fields of the channel format description
+    std::cout << "Channel Format Description:" << std::endl;
+    std::cout << "x: " << channelDesc.x << std::endl;
+    std::cout << "y: " << channelDesc.y << std::endl;
+    std::cout << "z: " << channelDesc.z << std::endl;
+    std::cout << "w: " << channelDesc.w << std::endl;
+    std::cout << "f: " << channelDesc.f << std::endl;
+*/
 }
 
 ImageKernel::~ImageKernel()
 {
-    cudaFree(imageGPUptr_);
+    cudaFreeArray(imgPadCudaArray_);
     cudaGraphicsUnregisterResource(cudaTextureResource_);
     glDeleteTextures(1, &texture_);
 }
@@ -61,7 +74,7 @@ void ImageKernel::update(const Image& img)
         return;
     }
     this->checkCudaError(
-        cudaMemcpy2DToArray(cudaArray_, 0, 0, (void*)img.getPtr(), width_ * sizeof(RGB), width_ * sizeof(RGB), height_, cudaMemcpyHostToDevice),
+        cudaMemcpy2DToArray(imgCudaArray_, 0, 0, (void*)img.getPtr(), width_ * sizeof(RGB), width_ * sizeof(RGB), height_, cudaMemcpyHostToDevice),
         // ((cudaArray_t)imageGPUptr_, 0, 0, (void*)img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
         //cudaMemcpy((void*)imageGPUptr_, (void*)img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
         "cudaMemcpy update()"
@@ -71,10 +84,10 @@ void ImageKernel::update(const Image& img)
 
 void ImageKernel::readBack(const Image& img) const
 {
-    this->checkCudaError(
+    /*this->checkCudaError(
         cudaMemcpy((void*)img.getPtr(), (void*)imageGPUptr_, bufferSize_, cudaMemcpyDeviceToHost),
         "cudaMemcpy readback()"
-    );
+    );*/
 }
 
 void ImageKernel::loadTexture()
@@ -109,10 +122,12 @@ void ImageKernel::loadTexture()
     std::cout << "cudaGraphicsSubResourceGetMappedArray" << std::endl;
     this->checkCudaError(
         //cudaGraphicsResourceGetMappedPointer((void**)&imageGPUptr_, &cudaSize, cudaTextureResource_),
-        cudaGraphicsSubResourceGetMappedArray(&cudaArray_, cudaTextureResource_, 0, 0),
+        cudaGraphicsSubResourceGetMappedArray(&imgCudaArray_, cudaTextureResource_, 0, 0),
         "cudaGraphicsSubResourceGetMappedArray"
     );
     cudaDeviceSynchronize();
+    std::vector<float> kernelData(25, 1.0 / 15.0);
+    this->convolution(2, kernelData);
 }
 
 bool ImageKernel::checkCudaError(cudaError_t ce, std::string msg) const
@@ -128,7 +143,10 @@ bool ImageKernel::checkCudaError(cudaError_t ce, std::string msg) const
 
 void ImageKernel::imgToPadded()
 {
-    //k_imgToPadded<<<TODO>>>(imageGPUptr_, imageGPUpaddedPtr_);
+    this->checkCudaError(
+        cudaMemcpy2DArrayToArray(imgPadCudaArray_, padding_, padding_, imgCudaArray_, 0, 0, width_, height_),
+        "cudaMemcpy2DArrayToArray imgToPadded()"
+    );
 }
 
 void ImageKernel::convolution(unsigned int kernelSize, const std::vector<float>& kernel)
@@ -163,7 +181,9 @@ void ImageKernel::convolution(unsigned int kernelSize, const std::vector<float>&
         cudaMalloc((void**)&kernelGPUptr, kernelValues * sizeof(float)),
         "cudaMalloc kernelGPUptr"
     );
-    k_convolution<<<height_, width_>>>(imageGPUptr_, imageGPUpaddedPtr_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, width_);
+    std::cout << "convolustion" << std::endl;
+    k_convolution<<<height_, width_>>>((RGB*)imgCudaArray_, (RGB*)imgPadCudaArray_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, width_);
+    cudaDeviceSynchronize();
     cudaFree(relativeIdxsGPUptr);
     cudaFree(kernelGPUptr);
 }

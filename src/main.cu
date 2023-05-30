@@ -124,9 +124,12 @@ int main()
     img.drawCircle(1000, 1000, 500 , RGB{255, 0, 0});
     imgKernel.update(img);    
 
+    std::vector<float> kernelData(25, 1.0 / 15.0);
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
+        std::cout << "Loop" << std::endl;
         processInput(window);
 
         /* Render here */
@@ -134,6 +137,7 @@ int main()
 
         //img.randomize();
         //imgKernel.update(img);
+        imgKernel.convolution(2, kernelData);
 
         //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, W_4K, H_4K, 0, GL_RGB, GL_UNSIGNED_BYTE, img.getPtr());
         //glGenerateMipmap(GL_TEXTURE_2D);
