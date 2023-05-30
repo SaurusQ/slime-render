@@ -122,6 +122,8 @@ int main()
     ImageKernel imgKernel{img, 100};
     GLuint texture = imgKernel.getTexture();
     img.drawCircle(400, 200, 50 , RGB{255, 0, 0});
+    img.randomize();
+    imgKernel.update(img);
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
