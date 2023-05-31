@@ -9,6 +9,9 @@ TARGET := slime.exe
 SRCS := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*.cu) $(wildcard lib/glad/src/glad.c)
 OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(BUILD_DIR)/%.o,$(SRCS))
 
+run: all
+	./build/slime.exe
+
 all: $(BUILD_DIR)/$(TARGET)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cpp

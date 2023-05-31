@@ -121,7 +121,7 @@ int main()
     Image img{W_4K, H_4K};
     ImageKernel imgKernel{img, 100};
     GLuint texture = imgKernel.getTexture();
-    img.drawCircle(1000, 1000, 500 , RGB{255, 0, 0});
+    img.drawCircle(1000, 1000, 500 , RGB{255, 255, 255});
     imgKernel.update(img);    
 
     std::vector<float> kernelData(25, 1.0 / 15.0);
@@ -137,7 +137,7 @@ int main()
 
         //img.randomize();
         //imgKernel.update(img);
-        imgKernel.convolution(2, kernelData);
+        //imgKernel.convolution(2, kernelData);
 
         //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, W_4K, H_4K, 0, GL_RGB, GL_UNSIGNED_BYTE, img.getPtr());
         //glGenerateMipmap(GL_TEXTURE_2D);

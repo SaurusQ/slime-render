@@ -15,15 +15,19 @@ ImageKernel::ImageKernel(const Image& img, unsigned int padding)
     bufferSizePadded_   = img.getPaddedBufferSize(padding_);
 
     const cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(32, 32, 32, 32, cudaChannelFormatKindFloat);
-    this->checkCudaError(
+    /*this->checkCudaError(
         cudaMallocArray(&imgPadCudaArray_, &channelDesc, width_ + padding_ * 2, height_ + padding_ * 2),
         "cudaMallocArray for imgPadCudaArray_"
+    );*/
+    this->checkCudaError(
+        cudaMalloc((void**)&imgPadCudaArray_, bufferSizePadded_),
+        "cudaMalloc image padded"
     );
 
-    /*this->checkCudaError(
-        cudaMemset(imageGPUpaddedPtr_, 0, bufferSizePadded_),
+    this->checkCudaError(
+        cudaMemset((void*)imgPadCudaArray_, 0, bufferSizePadded_),
         "cudaMemset"
-    );*/
+    );
     this->loadTexture();
     this->update(img);
 
@@ -44,24 +48,24 @@ ImageKernel::ImageKernel(const Image& img, unsigned int padding)
 
 ImageKernel::~ImageKernel()
 {
-    cudaFreeArray(imgPadCudaArray_);
-    cudaGraphicsUnregisterResource(cudaTextureResource_);
+    cudaFree((void*)imgPadCudaArray_);
+    cudaGraphicsUnregisterResource(cudaPboResource_);
     glDeleteTextures(1, &texture_);
 }
 
 void ImageKernel::activateCuda()
 {
-    if (cudaTextureResource_ != nullptr)
+    if (cudaPboResource_ != nullptr)
     {
-        cudaGraphicsMapResources(1, &cudaTextureResource_);
+        cudaGraphicsMapResources(1, &cudaPboResource_);
     }
 }
 
 void ImageKernel::deactivateCuda()
 {
-    if (cudaTextureResource_ != nullptr)
+    if (cudaPboResource_ != nullptr)
     {
-        cudaGraphicsUnmapResources(1, &cudaTextureResource_);
+        cudaGraphicsUnmapResources(1, &cudaPboResource_);
     }
 }
 
@@ -74,9 +78,9 @@ void ImageKernel::update(const Image& img)
         return;
     }
     this->checkCudaError(
-        cudaMemcpy2DToArray(imgCudaArray_, 0, 0, (void*)img.getPtr(), width_ * sizeof(RGB), width_ * sizeof(RGB), height_, cudaMemcpyHostToDevice),
+        //cudaMemcpy2DToArray(imgCudaArray_, 0, 0, (void*)img.getPtr(), width_ * sizeof(RGB), width_ * sizeof(RGB), height_, cudaMemcpyHostToDevice),
         // ((cudaArray_t)imageGPUptr_, 0, 0, (void*)img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
-        //cudaMemcpy((void*)imageGPUptr_, (void*)img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
+        cudaMemcpy((void*)imgCudaArray_, (void*)img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
         "cudaMemcpy update()"
     );
     cudaDeviceSynchronize();
@@ -92,6 +96,12 @@ void ImageKernel::readBack(const Image& img) const
 
 void ImageKernel::loadTexture()
 {
+    // Pixel buffer object
+    glGenBuffers(1, &pbo_);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo_);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, bufferSize_, nullptr, GL_DYNAMIC_DRAW);
+
+    // Texture
     glGenTextures(1, &texture_);
     glBindTexture(GL_TEXTURE_2D, texture_);
     // set basic parameters
@@ -99,35 +109,40 @@ void ImageKernel::loadTexture()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+
     // Create texture data (4-component unsigned byte)
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo_);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width_, height_, 0, GL_RGB, GL_FLOAT, NULL);
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
     // Unbind the texture
     //glBindTexture(GL_TEXTURE_2D, texture_);
 
-    std::cout << "texture loaded" << std::endl;
-
-    // Register the texture with cuda
-    std::cout << "cudaGraphicsGLRegisterImage" << std::endl;
-    this->checkCudaError(
-        cudaGraphicsGLRegisterImage(&cudaTextureResource_, texture_, GL_TEXTURE_2D, cudaGraphicsRegisterFlagsWriteDiscard),
-        "cudaGraphicsGLRegisterImage"
-    );  
     // cuda device pointer from cuda graphics resource
-    std::cout << "cudaGraphicsMapResources" << std::endl;
+    
     this->checkCudaError(
-        cudaGraphicsMapResources(1, &cudaTextureResource_),
+        cudaGraphicsGLRegisterBuffer(&cudaPboResource_, pbo_, cudaGraphicsMapFlagsWriteDiscard),
+        "cudaGraphicsGLRegisterBUffer"
+    );
+
+    this->checkCudaError(
+        cudaGraphicsMapResources(1, &cudaPboResource_, 0),
         "cudaGraphicsMapResources"
     );
 
     std::cout << "cudaGraphicsSubResourceGetMappedArray" << std::endl;
+    size_t cudaPboSize;
     this->checkCudaError(
         //cudaGraphicsResourceGetMappedPointer((void**)&imageGPUptr_, &cudaSize, cudaTextureResource_),
-        cudaGraphicsSubResourceGetMappedArray(&imgCudaArray_, cudaTextureResource_, 0, 0),
+        cudaGraphicsResourceGetMappedPointer((void**)&imgCudaArray_, &cudaPboSize, cudaPboResource_),
         "cudaGraphicsSubResourceGetMappedArray"
     );
+
+    if (cudaPboSize != bufferSize_)
+    {
+        std::cerr << "Something wrong with buffer sizes: pbo: " << cudaPboSize << " buffer: " << bufferSize_ << std::endl;
+    }
     cudaDeviceSynchronize();
-    std::vector<float> kernelData(25, 1.0 / 15.0);
-    this->convolution(2, kernelData);
 }
 
 bool ImageKernel::checkCudaError(cudaError_t ce, std::string msg) const
@@ -143,9 +158,14 @@ bool ImageKernel::checkCudaError(cudaError_t ce, std::string msg) const
 
 void ImageKernel::imgToPadded()
 {
+    /*
     this->checkCudaError(
         cudaMemcpy2DArrayToArray(imgPadCudaArray_, padding_, padding_, imgCudaArray_, 0, 0, width_, height_),
         "cudaMemcpy2DArrayToArray imgToPadded()"
+    );*/
+    this->checkCudaError(
+        cudaMemcpy2D((void*)imgPadCudaArray_, (width_ + 2 * padding_) * sizeof(RGB), imgCudaArray_, width_ * sizeof(RGB), width_, height_, cudaMemcpyDeviceToDevice),
+        "cudaMemcpy imgToPadded()"
     );
 }
 
