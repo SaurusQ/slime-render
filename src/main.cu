@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <sstream>
 
 constexpr char wndName[] = "slime";
 
@@ -33,6 +34,23 @@ void processInput(GLFWwindow *window)
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
+}
+
+void fpsHandler(double cur, GLFWwindow* window)
+{
+    static unsigned int nFrames = 0;
+    static double last = glfwGetTime();
+    nFrames++;
+    if(cur > (last + 1.0))
+    {
+        float fps = nFrames;
+        last += 1.0;
+
+        std::stringstream ss;
+        ss << wndName << " " << fps;
+        glfwSetWindowTitle(window, ss.str().c_str());
+        nFrames = 0;
+    }
 }
 
 int main()
@@ -124,7 +142,7 @@ int main()
     imgKernel.activateCuda();
     img.drawCircle(1000, 1000, 500 , RGB{1.0, 0, 0});
     //img.setColor(RGB{1.0, 0.0, 0.0});
-    //img.randomize();
+    img.randomize();
     imgKernel.update(img);
     imgKernel.deactivateCuda();
     
@@ -138,12 +156,17 @@ int main()
         1.0 / 256,  4.0 / 256,  6.0 / 256,  4.0 / 256,  1.0 / 256
     };
 
+    double currentTime = glfwGetTime();
+
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
+        currentTime = glfwGetTime();
+
         processInput(window);
 
-        /* Render here */
+        fpsHandler(currentTime, window);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         imgKernel.activateCuda();
@@ -167,10 +190,8 @@ int main()
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        /* Swap front and back buffers */
         glfwSwapBuffers(window);
 
-        /* Poll for and process events */
         glfwPollEvents();
     }
 
