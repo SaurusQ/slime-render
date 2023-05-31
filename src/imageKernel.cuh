@@ -25,10 +25,11 @@ private:
     // Kernel starters
     void imgToPadded();
 
-    cudaGraphicsResource_t cudaTextureResource_ = nullptr;
-    cudaArray_t imgCudaArray_ = nullptr;
-    cudaArray_t imgPadCudaArray_ = nullptr;
+    cudaGraphicsResource_t cudaPboResource_ = nullptr;
+    RGB* imgCudaArray_ = nullptr;
+    RGB* imgPadCudaArray_ = nullptr;
     GLuint texture_ = 0;
+    GLuint pbo_ = 0;
 
     unsigned int width_;
     unsigned int height_;
