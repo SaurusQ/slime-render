@@ -122,7 +122,7 @@ int main()
     ImageKernel imgKernel{img, 100};
     GLuint texture = imgKernel.getTexture();
     img.drawCircle(1000, 1000, 500 , RGB{255, 255, 255});
-    imgKernel.update(img);    
+    imgKernel.update(img);
 
     std::vector<float> kernelData(25, 1.0 / 15.0);
 
@@ -135,14 +135,19 @@ int main()
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        imgKernel.activateCuda();
         //img.randomize();
         //imgKernel.update(img);
-        //imgKernel.convolution(2, kernelData);
+        imgKernel.convolution(2, kernelData);
+        imgKernel.deactivateCuda();
 
-        //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, W_4K, H_4K, 0, GL_RGB, GL_UNSIGNED_BYTE, img.getPtr());
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, imgKernel.getPbo());
+
+        //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width_, height_, 0, GL_RGB, GL_FLOAT, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, W_4K, H_4K, 0, GL_RGB, GL_FLOAT, 0);
         //glGenerateMipmap(GL_TEXTURE_2D);
 
-        glBindTexture(GL_TEXTURE_2D, texture);
+        //glBindTexture(GL_TEXTURE_2D, texture);
         glActiveTexture(GL_TEXTURE0);
 
         // Render a textured quad that covers the entire window

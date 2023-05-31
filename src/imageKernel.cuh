@@ -16,7 +16,8 @@ public:
     void deactivateCuda();
     void update(const Image& img);
     void readBack(const Image& img) const;
-    GLuint getTexture() const { return texture_; };
+    GLuint getTexture() const { return texture_; }
+    GLuint getPbo() const { return pbo_; }
     // Kernel starters
     void convolution(unsigned int kernelSize, const std::vector<float>& kernel);
 private:
@@ -30,6 +31,8 @@ private:
     RGB* imgPadCudaArray_ = nullptr;
     GLuint texture_ = 0;
     GLuint pbo_ = 0;
+
+    bool cudaActive_ = false;
 
     unsigned int width_;
     unsigned int height_;
