@@ -11,6 +11,7 @@ public:
     Image(unsigned int width, unsigned int height);
     ~Image();
     void randomize();
+    void setColor(RGB color);
     void drawCircle(unsigned int x, unsigned int y, unsigned int radius, RGB rgb);
     void colorOneByOne();
     const RGB* getPtr() const { return imagePtr_.get(); }
