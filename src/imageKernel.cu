@@ -28,7 +28,7 @@ ImageKernel::ImageKernel(const Image& img, unsigned int padding)
 
     this->checkCudaError(
         cudaMemset((void*)imgPadCudaArray_, 0, bufferSizePadded_),
-        "cudaMemset"
+        "cudaMemset image padded"
     );
     this->loadTexture();
     this->activateCuda();
@@ -170,7 +170,7 @@ void ImageKernel::imgToPadded()
         "cudaMemcpy2DArrayToArray imgToPadded()"
     );*/
     this->checkCudaError(
-        cudaMemcpy2D((void*)imgPadCudaArray_, (width_ + 2 * padding_) * sizeof(RGB), imgCudaArray_, width_ * sizeof(RGB), width_, height_, cudaMemcpyDeviceToDevice),
+        cudaMemcpy2D((void*)(imgPadCudaArray_ + padding_ + (width_ + 2 * padding_) * padding_), (width_ + 2 * padding_) * sizeof(RGB), (void*)imgCudaArray_, width_ * sizeof(RGB), width_ * sizeof(RGB), height_, cudaMemcpyDeviceToDevice),
         "cudaMemcpy imgToPadded()"
     );
 }
@@ -195,9 +195,10 @@ void ImageKernel::convolution(unsigned int kernelSize, const std::vector<float>&
     {
         for (int x = -kernelSize; x <= kernelSize; x++)
         {
-            relativeIdxs.push_back(x + y * width_);
+            relativeIdxs.push_back(x + y * (width_ + 2 * padding_));
         }
     }
+
     int* relativeIdxsGPUptr = nullptr;
     float* kernelGPUptr = nullptr;
     this->checkCudaError(
@@ -205,14 +206,23 @@ void ImageKernel::convolution(unsigned int kernelSize, const std::vector<float>&
         "cudaMalloc relativeIdxsGPUptr"
     );
     this->checkCudaError(
+        cudaMemcpy((void*)relativeIdxsGPUptr, relativeIdxs.data(), relativeIdxs.size() * sizeof(int), cudaMemcpyHostToDevice),
+        "cudaMemcpy relativeIdxs" 
+    );
+    this->checkCudaError(
         cudaMalloc((void**)&kernelGPUptr, kernelValues * sizeof(float)),
         "cudaMalloc kernelGPUptr"
     );
-    std::cout << "convolustion" << std::endl;
+    this->checkCudaError(
+        cudaMemcpy((void*)kernelGPUptr, kernel.data(), kernel.size() * sizeof(float), cudaMemcpyHostToDevice),
+        "cudaMemcpy kernel" 
+    );
+
     dim3 dimGrid(120, 72);
     dim3 dimBlock(32, 30);
-    k_convolution<<<dimGrid, dimBlock>>>((RGB*)imgCudaArray_, (RGB*)imgPadCudaArray_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, width_);
-    std::cout << "error" << cudaGetErrorString(cudaGetLastError()) << std::endl;
+    k_convolution<<<dimGrid, dimBlock>>>((RGB*)imgCudaArray_, (RGB*)imgPadCudaArray_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, width_, padding_);
+    this->checkCudaError(cudaGetLastError(), "k_convolution");
+
     cudaDeviceSynchronize();
     cudaFree(relativeIdxsGPUptr);
     cudaFree(kernelGPUptr);

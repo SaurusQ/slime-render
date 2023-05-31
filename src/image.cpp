@@ -31,6 +31,17 @@ void Image::randomize()
 
 }
 
+void Image::setColor(RGB color)
+{
+    for (int y = 0; y < height_; y++)
+    {
+        for (int x = 0; x < width_; x++)
+        {
+            imagePtr_.get()[(x + y * width_)] = color;
+        }
+    }
+}
+
 void Image::drawCircle(unsigned int cx, unsigned int cy, unsigned int radius, RGB rgb)
 {
     unsigned int r2 = radius * radius;
@@ -40,7 +51,7 @@ void Image::drawCircle(unsigned int cx, unsigned int cy, unsigned int radius, RG
         {
             int dx = cx -x;
             int dy = cy -y;
-            if(r2 >= dx * dx + dy * dy) imagePtr_[x + y * width_] = rgb;
+            if(r2 >= dx * dx + dy * dy) imagePtr_.get()[(x + y * width_)] = rgb;
         }
     }
 }

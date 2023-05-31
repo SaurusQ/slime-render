@@ -9,5 +9,6 @@ __global__ void k_convolution(
     int* relativeIdxs,
     float* kernel,
     unsigned int kernelValues,
-    unsigned int width
+    unsigned int width,
+    unsigned int padding
 );
