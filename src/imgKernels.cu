@@ -1,10 +1,13 @@
 #include "imgKernels.cuh"
-
+#include <iostream>
 
 __global__ void k_convolution(RGB* imgPtr, RGB* imgPadPtr, int* relativeIdxs, float* kernel, unsigned int kernelValues, unsigned int width)
 {
-    int x = threadIdx.x;
-    int y = blockIdx.x;
+    int x = blockIdx.x * 32 + threadIdx.x;
+    int y = blockIdx.y * 30  + threadIdx.y;
+
+    if(x == 0)
+        printf("kernel: %f\n", imgPtr[100 + 100 * width].r);
 
     imgPtr[x + y * width] = RGB{1.0, 1.0, 1.0};
     
