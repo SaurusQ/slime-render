@@ -88,6 +88,7 @@ void ImageKernel::deactivateCuda()
     {
         cudaGraphicsUnmapResources(1, &cudaPboResource_, 0);
     }
+    cudaDeviceSynchronize();
 }
 
 void ImageKernel::update(const Image& img)
@@ -191,11 +192,12 @@ void ImageKernel::convolution(unsigned int kernelSize, const std::vector<float>&
     }
     this->imgToPadded();
     std::vector<int> relativeIdxs;
-    for (int y = -kernelSize; y <= kernelSize; y++)
+    int k = kernelSize;
+    for (int y = -k; y <= k; y++)
     {
-        for (int x = -kernelSize; x <= kernelSize; x++)
+        for (int x = -k; x <= k; x++)
         {
-            relativeIdxs.push_back(x + y * (width_ + 2 * padding_));
+            relativeIdxs.push_back(x + y * static_cast<int>(width_ + 2 * padding_));
         }
     }
 
@@ -206,7 +208,7 @@ void ImageKernel::convolution(unsigned int kernelSize, const std::vector<float>&
         "cudaMalloc relativeIdxsGPUptr"
     );
     this->checkCudaError(
-        cudaMemcpy((void*)relativeIdxsGPUptr, relativeIdxs.data(), relativeIdxs.size() * sizeof(int), cudaMemcpyHostToDevice),
+        cudaMemcpy((void*)relativeIdxsGPUptr, relativeIdxs.data(), kernelValues * sizeof(int), cudaMemcpyHostToDevice),
         "cudaMemcpy relativeIdxs" 
     );
     this->checkCudaError(
@@ -214,7 +216,7 @@ void ImageKernel::convolution(unsigned int kernelSize, const std::vector<float>&
         "cudaMalloc kernelGPUptr"
     );
     this->checkCudaError(
-        cudaMemcpy((void*)kernelGPUptr, kernel.data(), kernel.size() * sizeof(float), cudaMemcpyHostToDevice),
+        cudaMemcpy((void*)kernelGPUptr, kernel.data(), kernelValues * sizeof(float), cudaMemcpyHostToDevice),
         "cudaMemcpy kernel" 
     );
 

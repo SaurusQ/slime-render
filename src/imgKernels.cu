@@ -12,6 +12,8 @@ __global__ void k_convolution(RGB* imgPtr, RGB* imgPadPtr, int* relativeIdxs, fl
     int idxPad = (padding * (2 * padding + width) + padding) + x + y * (width + 2 * padding);
     int idx = x + y * width; 
 
+    //imgPtr[(idx + 1) % (3840 * 2160)] = imgPadPtr[idxPad];
+
     //imgPtr[idx] = imgPadPtr[(padding * (2 * padding + width) + padding) + x + y * (width + 2 * padding)];
 
     /*
@@ -23,6 +25,7 @@ __global__ void k_convolution(RGB* imgPtr, RGB* imgPadPtr, int* relativeIdxs, fl
 
     printf("count: %u", count);
     */
+    
     
     float valueR = 0;
     float valueG = 0;
@@ -38,4 +41,5 @@ __global__ void k_convolution(RGB* imgPtr, RGB* imgPadPtr, int* relativeIdxs, fl
     iPtr[idx].r = valueR;
     iPtr[idx].g = valueG;
     iPtr[idx].b = valueB;
+    
 }

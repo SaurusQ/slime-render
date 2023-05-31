@@ -122,14 +122,21 @@ int main()
     ImageKernel imgKernel{img, 100};
     GLuint texture = imgKernel.getTexture();
     imgKernel.activateCuda();
-    //img.drawCircle(1000, 1000, 500 , RGB{1.0, 0, 0});
+    img.drawCircle(1000, 1000, 500 , RGB{1.0, 0, 0});
     //img.setColor(RGB{1.0, 0.0, 0.0});
-    img.randomize();
+    //img.randomize();
     imgKernel.update(img);
     imgKernel.deactivateCuda();
     
     
-    std::vector<float> kernelData(2601, 1.0 / 2601.0);
+    //std::vector<float> kernelData(2601, 1.0 / 2601.0);
+    std::vector<float> kernelData = {
+        1.0 / 256,  4.0 / 256,  6.0 / 256,  4.0 / 256,  1.0 / 256,
+        4.0 / 256, 16.0 / 256, 24.0 / 256, 16.0 / 256,  4.0 / 256,
+        6.0 / 256, 24.0 / 256, 36.0 / 256, 24.0 / 256,  6.0 / 256,
+        4.0 / 256, 16.0 / 256, 24.0 / 256, 16.0 / 256,  4.0 / 256,
+        1.0 / 256,  4.0 / 256,  6.0 / 256,  4.0 / 256,  1.0 / 256
+    };
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -142,8 +149,9 @@ int main()
         imgKernel.activateCuda();
         //img.randomize();
         //imgKernel.update(img);
-        imgKernel.convolution(25, kernelData);
+        imgKernel.convolution(2, kernelData);
         imgKernel.deactivateCuda();
+
 
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, imgKernel.getPbo());
 
