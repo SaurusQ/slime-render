@@ -6,7 +6,7 @@
 Image::Image(unsigned int width, unsigned int heigth)
 {
     // Image only handles values with a factor of 32
-    width_ = width + (32 - width % 32);
+    width_ = width + (32 - width % 32); // TODO let the image be any size, limit in kernel and correct block dims
     height_ = heigth + (32 - heigth % 32);
 
     pixels_ = width_ * height_;

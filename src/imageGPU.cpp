@@ -243,13 +243,13 @@ void ImageGPU::configAgents(unsigned int num)
         cudaMalloc((void**)&agents_, nAgents_ * sizeof(Agent)),
         "cudaMalloc agents"
     );
-
+    
     std::random_device rd;
     std::mt19937 rng(rd());
     std::uniform_real_distribution<float> dist(0.0, 2 * M_PI);
-
+    
     std::unique_ptr<Agent[]> cpuAgents = std::make_unique<Agent[]>(nAgents_);
-
+    
     for (int i = 0; i < nAgents_; i++)
     {
         Agent a;
@@ -257,7 +257,7 @@ void ImageGPU::configAgents(unsigned int num)
         a.angle = dist(rng);
         cpuAgents[i] = a;
     }
-
+    
     this-checkCudaError(
         cudaMemcpy(agents_, cpuAgents.get(), nAgents_ * sizeof(Agent), cudaMemcpyHostToDevice),
         "cudaMemcpy agent from cpu to gpu"
@@ -265,12 +265,11 @@ void ImageGPU::configAgents(unsigned int num)
 
     
     if (agentRandomState_ != nullptr) cudaFree(agentRandomState_);
+    
     this->checkCudaError(
         cudaMalloc(&agentRandomState_, 32 * sizeof(curandState)),
         "cudaMalloc agentRandomState_"
     );
-
-    std::cout << "after malloc" << std::endl;
 
     dim3 grid(1, 1);
     dim3 block(32, 1);
