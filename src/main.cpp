@@ -87,20 +87,6 @@ int main()
     shaderHandler.addShader("shaders/vertex.vert", GL_VERTEX_SHADER);
     shaderHandler.link();
 
-    // OpenGL buffers
-    /*GLuint renderbufferID;
-    glGenRenderbuffers(1, &renderbufferID);
-    glBindRenderbuffer(GL_RENDERBUFFER, renderbufferID);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, width, height);
-    // Register the buffer with cuda
-    cudaGraphicsResource* cudaResource;
-    cudaGraphicsGLRegisterImage(&cudaResource, renderbufferID, GL_RENDERBUFFER, cudaGraphicsRegisterFlagsWriteDiscard);
-    // Get pointer to the image
-    uchar4* d_image;
-    size_t imagePitch;
-    cudaGraphicsMapResources(1, &cudaResource);
-    cudaGraphicsResourceGetMappedPointer((void**)&d_image, &imagePitch, cudaResource);*/
-
     unsigned int VBO, VAO, EBO;
     glGenBuffers(1, &VBO);
     glGenVertexArrays(1, &VAO);
@@ -117,24 +103,6 @@ int main()
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
-
-    
-
-
-    // Depth buffer
-    //GLuint depthBuffer;
-    //glGenRenderbuffers( 1, &depthBuffer );
-    //glBindRenderbuffer( GL_RENDERBUFFER, depthBuffer );
-    //glRenderbufferStorage( GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height );
-    // Unbind the depth buffer
-    //glBindRenderbuffer( GL_RENDERBUFFER, 0 );
-
-    // Frame buffer
-    //GLuint framebuffer;
-    //glGenFramebuffers( 1, &framebuffer );
-    //glBindFramebuffer( GL_FRAMEBUFFER, framebuffer );
-    //glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0 );
-    //glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer );
 
     Image img{W_4K, H_4K};
     ImageGPU imgGPU{img, 100};
@@ -162,7 +130,6 @@ int main()
 
     double currentTime = glfwGetTime();
 
-    /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
         currentTime = glfwGetTime();
@@ -189,7 +156,7 @@ int main()
         //glBindTexture(GL_TEXTURE_2D, texture);
         glActiveTexture(GL_TEXTURE0);
 
-        // Render a textured quad that covers the entire window
+        // Render a VAO that cover the screen
         shaderHandler.use();
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -207,38 +174,3 @@ int main()
     return 0;
 }
 
-
-/*static inline void check(cudaError_t err, const char* context) {
-    if (err != cudaSuccess) {
-        std::cerr << "CUDA error: " << context << ": "
-            << cudaGetErrorString(err) << std::endl;
-        std::exit(EXIT_FAILURE);
-    }
-}
-
-#define CHECK(x) check(x, #x)
-
-int main()
-{
-    cudaSetDevice(0);
-
-    float* test = new float[2000];
-    float* testGPU = nullptr;
-
-    std::fill(test, test + 2000, 0);
-
-
-    //cudaMalloc((void**)&testGPU, 10000 * sizeof(float));
-    CHECK(cudaMalloc((void**)&testGPU, 2000 * sizeof(float)));
-
-    CHECK(cudaMemcpy(testGPU, test, 2000 * sizeof(float), cudaMemcpyHostToDevice));
-
-    kernel<<<1, 1>>>(2, 2, 2, testGPU);
-
-    CHECK(cudaMemcpy(test, testGPU, 2000 * sizeof(float), cudaMemcpyDeviceToHost));
-
-    cudaFree(testGPU);
-    delete[] test; 
-
-    return 0;
-}*/

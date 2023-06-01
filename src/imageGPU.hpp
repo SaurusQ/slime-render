@@ -20,13 +20,12 @@ public:
     void readBack(const Image& img) const;
     GLuint getTexture() const { return texture_; }
     GLuint getPbo() const { return pbo_; }
-    // Kernel starters
+    // GPU mods
     void addConvKernel(unsigned int kernelId, std::vector<float> kernel);
     void convolution(unsigned int kernelSize, unsigned int kernelId);
 private:
     void loadTexture();
     bool checkCudaError(cudaError_t cs, std::string msg) const;
-    // Kernel starters
     void imgToPadded();
 
     cudaGraphicsResource_t cudaPboResource_ = nullptr;
