@@ -15,8 +15,9 @@ ImageGPU::ImageGPU(const Image& img, unsigned int padding)
     height_             = img.getHeigth();
     bufferSize_         = img.getBufferSize();
     bufferSizePadded_   = img.getPaddedBufferSize(padding_);
+    padWidth_           = 2 * padding_ + width_;
 
-    const cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(32, 32, 32, 32, cudaChannelFormatKindFloat);
+    //const cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(32, 32, 32, 32, cudaChannelFormatKindFloat);
     /*this->checkCudaError(
         cudaMallocArray(&imgPadCudaArray_, &channelDesc, width_ + padding_ * 2, height_ + padding_ * 2),
         "cudaMallocArray for imgPadCudaArray_"
@@ -157,7 +158,7 @@ void ImageGPU::imgToPadded()
         "cudaMemcpy2DArrayToArray imgToPadded()"
     );*/
     this->checkCudaError(
-        cudaMemcpy2D((void*)(imgPadCudaArray_ + padding_ + (width_ + 2 * padding_) * padding_), (width_ + 2 * padding_) * sizeof(RGB), (void*)imgCudaArray_, width_ * sizeof(RGB), width_ * sizeof(RGB), height_, cudaMemcpyDeviceToDevice),
+        cudaMemcpy2D((void*)(imgPadCudaArray_ + padding_ + padWidth_ * padding_), padWidth_ * sizeof(RGB), (void*)imgCudaArray_, width_ * sizeof(RGB), width_ * sizeof(RGB), height_, cudaMemcpyDeviceToDevice),
         "cudaMemcpy imgToPadded()"
     );
 }
@@ -177,14 +178,27 @@ void ImageGPU::convolution(unsigned int kernelSize, const std::vector<float>& ke
         return;
     }
     this->imgToPadded();
-    std::vector<int> relativeIdxs;
-    int k = kernelSize;
-    for (int y = -k; y <= k; y++)
+    
+    int* relativeIdxs;
+    auto it = convRelIdxMap.find(kernelSize);
+    if (it == convRelIdxMap.end())
     {
-        for (int x = -k; x <= k; x++)
+        // Generate new relative idxs
+        std::vector<int> newRelIdx;
+        int k = kernelSize;
+        for (int y = -k; y <= k; y++)
         {
-            relativeIdxs.push_back(x + y * static_cast<int>(width_ + 2 * padding_));
+            for (int x = -k; x <= k; x++)
+            {
+                newRelIdx.push_back(x + y * static_cast<int>(padWidth_));
+            }
         }
+        convRelIdxMap[kernelSize] = newRelIdx;
+        relativeIdxs = convRelIdxMap[kernelSize].data();
+    }
+    else
+    {
+        relativeIdxs = it->second.data();
     }
 
     int* relativeIdxsGPUptr = nullptr;
@@ -194,7 +208,7 @@ void ImageGPU::convolution(unsigned int kernelSize, const std::vector<float>& ke
         "cudaMalloc relativeIdxsGPUptr"
     );
     this->checkCudaError(
-        cudaMemcpy((void*)relativeIdxsGPUptr, relativeIdxs.data(), kernelValues * sizeof(int), cudaMemcpyHostToDevice),
+        cudaMemcpy((void*)relativeIdxsGPUptr, relativeIdxs, kernelValues * sizeof(int), cudaMemcpyHostToDevice),
         "cudaMemcpy relativeIdxs" 
     );
     this->checkCudaError(
@@ -208,7 +222,7 @@ void ImageGPU::convolution(unsigned int kernelSize, const std::vector<float>& ke
 
     dim3 dimGrid(width_ / 32, height_ / 32);
     dim3 dimBlock(32, 32);
-    kl_convolution(dimGrid, dimBlock, (RGB*)imgCudaArray_, (RGB*)imgPadCudaArray_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, width_, padding_);
+    kl_convolution(dimGrid, dimBlock, (RGB*)imgCudaArray_, (RGB*)imgPadCudaArray_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, width_, padWidth_, padding_);
     this->checkCudaError(cudaGetLastError(), "kl_convolution");
 
     cudaDeviceSynchronize();

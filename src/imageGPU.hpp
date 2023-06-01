@@ -5,7 +5,9 @@
 
 #include <cuda_runtime.h>
 #include <glad/glad.h>
+
 #include <vector>
+#include <unordered_map> 
 
 class ImageGPU
 {
@@ -39,4 +41,8 @@ private:
     unsigned int bufferSize_;
     unsigned int bufferSizePadded_;
     unsigned int padding_;
+    unsigned int padWidth_;
+
+    // Convolution
+    std::unordered_map<int, std::vector<int>> convRelIdxMap;
 };

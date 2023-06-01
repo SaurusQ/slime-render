@@ -8,19 +8,17 @@ void kl_convolution(dim3 grid, dim3 block,
     float* kernel,
     unsigned int kernelValues,
     unsigned int width,
+    unsigned int padWidth,
     unsigned int padding
 )
 {
-    k_convolution<<<grid, block>>>(imgPtr, imgPadPtr, relativeIdxs, kernel, kernelValues, width, padding);
+    k_convolution<<<grid, block>>>(imgPtr, imgPadPtr, relativeIdxs, kernel, kernelValues, width, padWidth, padding);
 }
 
-__global__ void k_convolution(RGB* imgPtr, RGB* imgPadPtr, int* relativeIdxs, float* kernel, unsigned int kernelValues, unsigned int width, unsigned int padding)
+__global__ void k_convolution(RGB* imgPtr, RGB* imgPadPtr, int* relativeIdxs, float* kernel, unsigned int kernelValues, unsigned int width, unsigned int padWidth, unsigned int padding)
 {
     int x = blockIdx.x * 32 + threadIdx.x;
     int y = blockIdx.y * 32  + threadIdx.y;
-
-    RGB* iPtr = imgPtr;
-    RGB* iPadPtr = imgPadPtr;
 
     int idxPad = (padding * (2 * padding + width) + padding) + x + y * (width + 2 * padding);
     int idx = x + y * width; 
@@ -46,13 +44,13 @@ __global__ void k_convolution(RGB* imgPtr, RGB* imgPadPtr, int* relativeIdxs, fl
 
     for (int i = 0; i < kernelValues; i++)
     {
-        valueR += iPadPtr[idxPad + relativeIdxs[i]].r * kernel[i];
-        valueG += iPadPtr[idxPad + relativeIdxs[i]].g * kernel[i];
-        valueB += iPadPtr[idxPad + relativeIdxs[i]].b * kernel[i];
+        valueR += imgPadPtr[idxPad + relativeIdxs[i]].r * kernel[i];
+        valueG += imgPadPtr[idxPad + relativeIdxs[i]].g * kernel[i];
+        valueB += imgPadPtr[idxPad + relativeIdxs[i]].b * kernel[i];
     }    
 
-    iPtr[idx].r = valueR;
-    iPtr[idx].g = valueG;
-    iPtr[idx].b = valueB;
+    imgPtr[idx].r = valueR;
+    imgPtr[idx].g = valueG;
+    imgPtr[idx].b = valueB;
     
 }
