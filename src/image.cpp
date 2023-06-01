@@ -6,8 +6,8 @@
 Image::Image(unsigned int width, unsigned int heigth)
 {
     // Image only handles values with a factor of 32
-    width_ = width + (width % 32);
-    height_ = heigth + (heigth % 32);
+    width_ = width + (32 - width % 32);
+    height_ = heigth + (32 - heigth % 32);
 
     pixels_ = width_ * height_;
     imagePtr_ = std::make_unique<RGB[]>(pixels_);

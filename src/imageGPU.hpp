@@ -4,6 +4,7 @@
 #include "definitions.hpp"
 
 #include <cuda_runtime.h>
+#include <curand_kernel.h>
 #include <glad/glad.h>
 
 #include <vector>
@@ -23,6 +24,9 @@ public:
     // GPU mods
     void addConvKernel(unsigned int kernelId, std::vector<float> kernel);
     void convolution(unsigned int kernelSize, unsigned int kernelId);
+    void configAgents(unsigned int num);
+    void configAgentParameters(float speed);
+    void updateAgents();
 private:
     void loadTexture();
     bool checkCudaError(cudaError_t cs, std::string msg) const;
@@ -46,4 +50,10 @@ private:
     // Convolution
     std::unordered_map<int, int*> convRelIdxsGPUptrs_;
     std::unordered_map<int, float*> convKernelGPUptrs_;
+
+    // Agent
+    Agent* agents_;
+    curandState* agentRandomState_;
+    unsigned int nAgents_ = 0;
+    float agentSpeed_ = 1.0;
 };

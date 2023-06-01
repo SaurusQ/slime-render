@@ -1,6 +1,7 @@
 #pragma once
 
 #include "definitions.hpp"
+#include <curand_kernel.h>
 
 void kl_convolution(dim3 grid, dim3 block,
     RGB* imgPtr,
@@ -24,4 +25,32 @@ __global__ void k_convolution(
     unsigned int padWidth,
     unsigned int padding,
     unsigned int padOffset
+);
+
+void kl_updateAgents(dim3 grid, dim3 block,
+    curandState* randomState,
+    RGB* imgPtr,
+    Agent* agents,
+    unsigned int nAgents,
+    float speed,
+    unsigned int width,
+    unsigned int heigth
+);
+
+__global__ void k_updateAgents(
+    curandState* randomState,
+    RGB* imgPtr,
+    Agent* agents,
+    unsigned int nAgents,
+    float speed,
+    unsigned int width,
+    unsigned int heigth
+);
+
+void kl_initCurand32(dim3 grid, dim3 block,
+    curandState* state
+);
+
+__global__ void k_initCurand32(
+    curandState* state
 );

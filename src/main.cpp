@@ -108,9 +108,9 @@ int main()
     ImageGPU imgGPU{img, 100};
     GLuint texture = imgGPU.getTexture();
     imgGPU.activateCuda();
-    img.drawCircle(1000, 1000, 500 , RGB{1.0, 0, 0});
-    //img.setColor(RGB{1.0, 0.0, 0.0});
-    img.randomize();
+    //img.drawCircle(1000, 1000, 500 , RGB{1.0, 0, 0});
+    img.setColor(RGB{0.0, 0.0, 0.0});
+    //img.randomize();
     imgGPU.update(img);
     imgGPU.deactivateCuda();
     
@@ -124,6 +124,9 @@ int main()
         1.0 / 256,  4.0 / 256,  6.0 / 256,  4.0 / 256,  1.0 / 256
     };
     imgGPU.addConvKernel(1, kernelData);
+
+    imgGPU.configAgents(128);
+    imgGPU.configAgentParameters(0.5);
 
     unsigned int IMG_W = img.getWidth();
     unsigned int IMG_H = img.getHeigth();
@@ -143,7 +146,8 @@ int main()
         imgGPU.activateCuda();
         //img.randomize();
         //imgKernel.update(img);
-        imgGPU.convolution(2, 1);
+        //imgGPU.convolution(2, 1);
+        imgGPU.updateAgents();
         imgGPU.deactivateCuda();
 
 
