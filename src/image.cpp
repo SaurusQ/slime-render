@@ -27,7 +27,7 @@ void Image::randomize()
 
     for (int i = 0; i < pixels_; i++)
     {
-        imagePtr_[i].r = dist(rng); // TODO r and b swapped
+        imagePtr_[i].r = dist(rng);
         imagePtr_[i].g = dist(rng);
         imagePtr_[i].b = dist(rng);
     }

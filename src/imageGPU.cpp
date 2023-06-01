@@ -17,11 +17,6 @@ ImageGPU::ImageGPU(const Image& img, unsigned int padding)
     bufferSizePadded_   = img.getPaddedBufferSize(padding_);
     padWidth_           = 2 * padding_ + width_;
 
-    //const cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc(32, 32, 32, 32, cudaChannelFormatKindFloat);
-    /*this->checkCudaError(
-        cudaMallocArray(&imgPadCudaArray_, &channelDesc, width_ + padding_ * 2, height_ + padding_ * 2),
-        "cudaMallocArray for imgPadCudaArray_"
-    );*/
     this->checkCudaError(
         cudaMalloc((void**)&imgPadCudaArray_, bufferSizePadded_),
         "cudaMalloc image padded"
@@ -65,7 +60,6 @@ void ImageGPU::activateCuda()
 
         size_t cudaPboSize;
         this->checkCudaError(
-            //cudaGraphicsResourceGetMappedPointer((void**)&imageGPUptr_, &cudaSize, cudaTextureResource_),
             cudaGraphicsResourceGetMappedPointer((void**)&imgCudaArray_, &cudaPboSize, cudaPboResource_),
             "cudaGraphicsSubResourceGetMappedArray"
         );
@@ -92,13 +86,10 @@ void ImageGPU::update(const Image& img)
     REQUIRE_CUDA
     if(img.getBufferSize() != bufferSize_)
     {
-        // TODO allow different buffer sizes by reallocatig memory
         std::cout << "Different buffer sizes " << bufferSize_ << " : " << img.getBufferSize() << std::endl;
         return;
     }
     this->checkCudaError(
-        //cudaMemcpy2DToArray(imgCudaArray_, 0, 0, (void*)img.getPtr(), width_ * sizeof(RGB), width_ * sizeof(RGB), height_, cudaMemcpyHostToDevice),
-        // ((cudaArray_t)imageGPUptr_, 0, 0, (void*)img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
         cudaMemcpy((void*)imgCudaArray_, (void*)img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
         "cudaMemcpy update()"
     );
@@ -161,11 +152,6 @@ bool ImageGPU::checkCudaError(cudaError_t ce, std::string msg) const
 void ImageGPU::imgToPadded()
 {
     REQUIRE_CUDA
-    /*
-    this->checkCudaError(
-        cudaMemcpy2DArrayToArray(imgPadCudaArray_, padding_, padding_, imgCudaArray_, 0, 0, width_, height_),
-        "cudaMemcpy2DArrayToArray imgToPadded()"
-    );*/
     this->checkCudaError(
         cudaMemcpy2D((void*)(imgPadCudaArray_ + padding_ + padWidth_ * padding_), padWidth_ * sizeof(RGB), (void*)imgCudaArray_, width_ * sizeof(RGB), width_ * sizeof(RGB), height_, cudaMemcpyDeviceToDevice),
         "cudaMemcpy imgToPadded()"
