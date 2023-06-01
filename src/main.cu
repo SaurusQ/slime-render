@@ -137,14 +137,14 @@ int main()
     //glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer );
 
     Image img{W_4K, H_4K};
-    ImageGPU imgKernel{img, 100};
-    GLuint texture = imgKernel.getTexture();
-    imgKernel.activateCuda();
+    ImageGPU imgGPU{img, 100};
+    GLuint texture = imgGPU.getTexture();
+    imgGPU.activateCuda();
     img.drawCircle(1000, 1000, 500 , RGB{1.0, 0, 0});
     //img.setColor(RGB{1.0, 0.0, 0.0});
     img.randomize();
-    imgKernel.update(img);
-    imgKernel.deactivateCuda();
+    imgGPU.update(img);
+    imgGPU.deactivateCuda();
     
     
     //std::vector<float> kernelData(2601, 1.0 / 2601.0);
@@ -155,6 +155,7 @@ int main()
         4.0 / 256, 16.0 / 256, 24.0 / 256, 16.0 / 256,  4.0 / 256,
         1.0 / 256,  4.0 / 256,  6.0 / 256,  4.0 / 256,  1.0 / 256
     };
+    imgGPU.addConvKernel(1, kernelData);
 
     unsigned int IMG_W = img.getWidth();
     unsigned int IMG_H = img.getHeigth();
@@ -172,14 +173,14 @@ int main()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        imgKernel.activateCuda();
+        imgGPU.activateCuda();
         //img.randomize();
         //imgKernel.update(img);
-        imgKernel.convolution(2, kernelData);
-        imgKernel.deactivateCuda();
+        imgGPU.convolution(2, 1);
+        imgGPU.deactivateCuda();
 
 
-        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, imgKernel.getPbo());
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, imgGPU.getPbo());
 
         //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width_, height_, 0, GL_RGB, GL_FLOAT, NULL);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, IMG_W, IMG_H, 0, GL_RGB, GL_FLOAT, 0);
