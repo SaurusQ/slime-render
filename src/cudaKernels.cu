@@ -9,18 +9,19 @@ void kl_convolution(dim3 grid, dim3 block,
     unsigned int kernelValues,
     unsigned int width,
     unsigned int padWidth,
-    unsigned int padding
+    unsigned int padding,
+    unsigned int padOffset
 )
 {
-    k_convolution<<<grid, block>>>(imgPtr, imgPadPtr, relativeIdxs, kernel, kernelValues, width, padWidth, padding);
+    k_convolution<<<grid, block>>>(imgPtr, imgPadPtr, relativeIdxs, kernel, kernelValues, width, padWidth, padding, padOffset);
 }
 
-__global__ void k_convolution(RGB* imgPtr, RGB* imgPadPtr, int* relativeIdxs, float* kernel, unsigned int kernelValues, unsigned int width, unsigned int padWidth, unsigned int padding)
+__global__ void k_convolution(RGB* imgPtr, RGB* imgPadPtr, int* relativeIdxs, float* kernel, unsigned int kernelValues, unsigned int width, unsigned int padWidth, unsigned int padding, unsigned int padOffset)
 {
     int x = blockIdx.x * 32 + threadIdx.x;
-    int y = blockIdx.y * 32  + threadIdx.y;
+    int y = blockIdx.y * 32 + threadIdx.y;
 
-    int idxPad = (padding * (2 * padding + width) + padding) + x + y * (width + 2 * padding);
+    int idxPad = padOffset + x + y * padWidth;
     int idx = x + y * width; 
 
     //imgPtr[(idx + 1) % (3840 * 2160)] = imgPadPtr[idxPad];
