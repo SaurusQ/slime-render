@@ -227,12 +227,20 @@ void ImageGPU::convolution(unsigned int kernelSize, unsigned int kernelId)
 
     unsigned int padOffset = padding_ * padWidth_ + padding_;
 
-    dim3 dimGrid(width_ / 32, height_ / 32);
-    dim3 dimBlock(32, 32);
-    kl_convolution(dimGrid, dimBlock, (RGB*)imgCudaArray_, (RGB*)imgPadCudaArray_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, width_, padWidth_, padding_, padOffset);
+    dim3 grid(width_ / 32, height_ / 32);
+    dim3 block(32, 32);
+    kl_convolution(grid, block, (RGB*)imgCudaArray_, (RGB*)imgPadCudaArray_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, width_, padWidth_, padding_, padOffset);
     this->checkCudaError(cudaGetLastError(), "kl_convolution");
 
     cudaDeviceSynchronize();
+}
+
+void ImageGPU::evaporate(float strength)
+{
+    REQUIRE_CUDA
+    dim3 grid(width_ / 32, height_ / 32);
+    dim3 block(32, 32);
+    kl_evaporate(grid, block, imgCudaArray_, strength, width_);
 }
 
 void ImageGPU::configAgents(unsigned int num)
@@ -265,7 +273,7 @@ void ImageGPU::configAgents(unsigned int num)
 
     
     if (agentRandomState_ != nullptr) cudaFree(agentRandomState_);
-    
+
     this->checkCudaError(
         cudaMalloc(&agentRandomState_, 32 * sizeof(curandState)),
         "cudaMalloc agentRandomState_"
@@ -283,6 +291,7 @@ void ImageGPU::configAgentParameters(float speed)
 
 void ImageGPU::updateAgents()
 {
+    REQUIRE_CUDA
     dim3 grid(std::ceil(nAgents_ / 32.0), 1);
     dim3 block(32, 1);
     kl_updateAgents(grid, block, agentRandomState_, imgCudaArray_, agents_, nAgents_, agentSpeed_, width_, height_);

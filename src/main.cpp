@@ -124,7 +124,7 @@ int main()
     imgGPU.addConvKernel(2, kernelData);
     imgGPU.addConvKernel(1, std::vector<float>(9, 1.0 / 9.0));
 
-    imgGPU.configAgents(4092);
+    imgGPU.configAgents(250);
     imgGPU.configAgentParameters(3.0);
 
     unsigned int IMG_W = img.getWidth();
@@ -143,8 +143,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         imgGPU.activateCuda();
-        //img.randomize();
-        //imgKernel.update(img);
+        imgGPU.evaporate(0.03);
         imgGPU.convolution(1, 1);
         imgGPU.updateAgents();
         imgGPU.deactivateCuda();
