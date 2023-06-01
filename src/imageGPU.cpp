@@ -5,6 +5,8 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <random>
+#include <cmath>
 
 #define REQUIRE_CUDA if(!cudaActive_) { std::cout << "cuda not active" << std::endl; return; };
 
@@ -46,6 +48,7 @@ ImageGPU::~ImageGPU()
     {
         cudaFree(pair.second);
     }
+    if (agents_ != nullptr) cudaFree(agents_);
 }
 
 void ImageGPU::activateCuda()
@@ -230,4 +233,58 @@ void ImageGPU::convolution(unsigned int kernelSize, unsigned int kernelId)
     this->checkCudaError(cudaGetLastError(), "kl_convolution");
 
     cudaDeviceSynchronize();
+}
+
+void ImageGPU::configAgents(unsigned int num)
+{
+    nAgents_ = num;
+    if (agents_ != nullptr) cudaFree(agents_);
+    this->checkCudaError(
+        cudaMalloc((void**)&agents_, nAgents_ * sizeof(Agent)),
+        "cudaMalloc agents"
+    );
+
+    std::random_device rd;
+    std::mt19937 rng(rd());
+    std::uniform_real_distribution<float> dist(0.0, 2 * M_PI);
+
+    std::unique_ptr<Agent[]> cpuAgents = std::make_unique<Agent[]>(nAgents_);
+
+    for (int i = 0; i < nAgents_; i++)
+    {
+        Agent a;
+        a.pos = float2{width_ / 2.0f, height_ / 2.0f};
+        a.angle = dist(rng);
+        cpuAgents[i] = a;
+    }
+
+    this-checkCudaError(
+        cudaMemcpy(agents_, cpuAgents.get(), nAgents_ * sizeof(Agent), cudaMemcpyHostToDevice),
+        "cudaMemcpy agent from cpu to gpu"
+    );
+
+    
+    if (agentRandomState_ != nullptr) cudaFree(agentRandomState_);
+    this->checkCudaError(
+        cudaMalloc(&agentRandomState_, 32 * sizeof(curandState)),
+        "cudaMalloc agentRandomState_"
+    );
+
+    std::cout << "after malloc" << std::endl;
+
+    dim3 grid(1, 1);
+    dim3 block(32, 1);
+    kl_initCurand32(grid, block, agentRandomState_);
+}
+
+void ImageGPU::configAgentParameters(float speed)
+{
+    agentSpeed_ = speed;
+}
+
+void ImageGPU::updateAgents()
+{
+    dim3 grid(std::ceil(nAgents_ / 32.0), 1);
+    dim3 block(32, 1);
+    kl_updateAgents(grid, block, agentRandomState_, imgCudaArray_, agents_, nAgents_, agentSpeed_, width_, height_);
 }
