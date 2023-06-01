@@ -24,6 +24,7 @@ public:
     // GPU mods
     void addConvKernel(unsigned int kernelId, std::vector<float> kernel);
     void convolution(unsigned int kernelSize, unsigned int kernelId);
+    void evaporate(float strength);
     void configAgents(unsigned int num);
     void configAgentParameters(float speed);
     void updateAgents();

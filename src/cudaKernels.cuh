@@ -27,6 +27,10 @@ __global__ void k_convolution(
     unsigned int padOffset
 );
 
+void kl_evaporate(dim3 grid, dim3 block, RGB* imgPtr, float strength, unsigned int width);
+
+__global__ void k_evaporate(RGB* imgPtr, float strength, unsigned int width);
+
 void kl_updateAgents(dim3 grid, dim3 block,
     curandState* randomState,
     RGB* imgPtr,
@@ -46,6 +50,8 @@ __global__ void k_updateAgents(
     unsigned int width,
     unsigned int heigth
 );
+
+__device__ float sense(Agent a, float angleOffset, RGB* imgPtr, unsigned int width, unsigned int heigth);
 
 void kl_initCurand32(dim3 grid, dim3 block,
     curandState* state

@@ -4,6 +4,12 @@
 
 #define PI 3.141592654f
 
+// TODO move everything here to proper configs
+__device__ float turnSpeed = 0.1;
+__device__ float sensorOffsetDst = 2.0;
+__device__ float sensorSize = 3.0;
+__device__ float sensorAngleSpacing = 0.3;
+
 void kl_convolution(dim3 grid, dim3 block,
     RGB* imgPtr,
     RGB* imgPadPtr,
@@ -69,6 +75,22 @@ __global__ void k_convolution(
     
 }
 
+void kl_evaporate(dim3 grid, dim3 block, RGB* imgPtr, float strength, unsigned int width)
+{
+    k_evaporate<<<grid, block>>>(imgPtr, strength, width);
+}
+
+__global__ void k_evaporate(RGB* imgPtr, float strength, unsigned int width)
+{
+    int x = blockIdx.x * 32 + threadIdx.x;
+    int y = blockIdx.y * 32 + threadIdx.y;
+    int idx = x + y * width;
+
+    imgPtr[idx].r = max(0.0, imgPtr[idx].r - strength);
+    imgPtr[idx].g = max(0.0, imgPtr[idx].g - strength);
+    imgPtr[idx].b = max(0.0, imgPtr[idx].b - strength);
+}
+
 void kl_updateAgents(dim3 grid, dim3 block,
     curandState* randomState,
     RGB* imgPtr,
@@ -109,6 +131,56 @@ __global__ void k_updateAgents(
     agents[agentIdx].pos = newPos;
 
     imgPtr[__float2uint_rd(newPos.x) + __float2uint_rd(newPos.y) * width] = RGB{1.0, 1.0, 1.0};
+
+
+    // Sense and turn
+    float wf = sense(a, 0.0, imgPtr, width, heigth);
+    float wl = sense(a, sensorAngleSpacing, imgPtr, width, heigth);
+    float wr = sense(a, -sensorAngleSpacing, imgPtr, width, heigth);
+
+    float randomSteer = curand_uniform(randomState + threadIdx.x);
+
+    if (wf > wl && wf > wr)
+    {
+        agents[agentIdx].angle += 0;
+    }
+    else if (wf < wl && wf < wr)
+    {
+        agents[agentIdx].angle += (randomSteer - 0.5) * 2 * turnSpeed; // TODO * deltaTime
+    }
+    else if (wr > wl) {
+        agents[agentIdx].angle -= randomSteer * turnSpeed; // TODO * deltaTime
+    }
+    else if (wl > wr)
+    {
+        agents[agentIdx].angle += randomSteer * turnSpeed; // TODO * deltaTime
+    }
+}
+
+__device__ float sense(Agent a, float sensorAngleOffset, RGB* imgPtr, unsigned int width, unsigned int heigth)
+{
+    float sensorAngle = a.angle + sensorAngleOffset;
+    float2 sensorDir = make_float2(cospi(sensorAngle), sinpi(sensorAngle));
+    int2 sensorCentre = make_int2(a.pos.x + sensorDir.x * sensorOffsetDst, a.pos.y + sensorDir.y * sensorOffsetDst);
+    
+    RGB sum = RGB{0.0, 0.0, 0.0};
+
+    for (int ox = -sensorSize; ox < sensorSize; ox++)
+    {
+        for (int oy = -sensorSize; oy < sensorSize; oy++)
+        {
+            int2 pos = make_int2(sensorCentre.x + ox, sensorCentre.y + oy);
+
+            if (pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < heigth)
+            {
+                int idx = pos.x + pos.y * width;
+                sum.r += imgPtr[idx].r;
+                sum.g += imgPtr[idx].g;
+                sum.b += imgPtr[idx].b;
+            }
+        }
+    }
+    return sum.r + sum.g + sum.b;
 }
 
 void kl_initCurand32(dim3 grid, dim3 block,

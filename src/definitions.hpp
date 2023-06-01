@@ -4,12 +4,12 @@
 
 #include <inttypes.h>
 
-#if 1
+#if 0
 constexpr unsigned int W_4K = 3840;
 constexpr unsigned int H_4K = 2160;
 #else
-constexpr unsigned int W_4K = 1000;
-constexpr unsigned int H_4K = 1000;
+constexpr unsigned int W_4K = 320;
+constexpr unsigned int H_4K = 180;
 #endif
 struct RGB
 {
