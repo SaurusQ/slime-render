@@ -1,5 +1,5 @@
 #include "image.hpp"
-#include "imageKernel.cuh"
+#include "imageGPU.hpp"
 #include "shaderHandler.hpp"
 #include "definitions.hpp"
 
@@ -137,7 +137,7 @@ int main()
     //glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depthBuffer );
 
     Image img{W_4K, H_4K};
-    ImageKernel imgKernel{img, 100};
+    ImageGPU imgKernel{img, 100};
     GLuint texture = imgKernel.getTexture();
     imgKernel.activateCuda();
     img.drawCircle(1000, 1000, 500 , RGB{1.0, 0, 0});
@@ -155,6 +155,9 @@ int main()
         4.0 / 256, 16.0 / 256, 24.0 / 256, 16.0 / 256,  4.0 / 256,
         1.0 / 256,  4.0 / 256,  6.0 / 256,  4.0 / 256,  1.0 / 256
     };
+
+    unsigned int IMG_W = img.getWidth();
+    unsigned int IMG_H = img.getHeigth();
 
     double currentTime = glfwGetTime();
 
@@ -179,7 +182,7 @@ int main()
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, imgKernel.getPbo());
 
         //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width_, height_, 0, GL_RGB, GL_FLOAT, NULL);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, W_4K, H_4K, 0, GL_RGB, GL_FLOAT, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, IMG_W, IMG_H, 0, GL_RGB, GL_FLOAT, 0);
         //glGenerateMipmap(GL_TEXTURE_2D);
 
         //glBindTexture(GL_TEXTURE_2D, texture);

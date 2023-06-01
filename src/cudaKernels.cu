@@ -1,10 +1,23 @@
-#include "imgKernels.cuh"
+#include "cudaKernels.cuh"
 #include <iostream>
+
+void kl_convolution(dim3 grid, dim3 block,
+    RGB* imgPtr,
+    RGB* imgPadPtr,
+    int* relativeIdxs,
+    float* kernel,
+    unsigned int kernelValues,
+    unsigned int width,
+    unsigned int padding
+)
+{
+    k_convolution<<<grid, block>>>(imgPtr, imgPadPtr, relativeIdxs, kernel, kernelValues, width, padding);
+}
 
 __global__ void k_convolution(RGB* imgPtr, RGB* imgPadPtr, int* relativeIdxs, float* kernel, unsigned int kernelValues, unsigned int width, unsigned int padding)
 {
     int x = blockIdx.x * 32 + threadIdx.x;
-    int y = blockIdx.y * 30  + threadIdx.y;
+    int y = blockIdx.y * 32  + threadIdx.y;
 
     RGB* iPtr = imgPtr;
     RGB* iPadPtr = imgPadPtr;

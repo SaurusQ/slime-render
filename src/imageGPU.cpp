@@ -1,5 +1,5 @@
-#include "imageKernel.cuh"
-#include "imgKernels.cuh"
+#include "imageGPU.hpp"
+#include "cudaKernels.cuh"
 
 #include <cuda_gl_interop.h>
 
@@ -8,11 +8,11 @@
 
 #define REQUIRE_CUDA if(!cudaActive_) { std::cout << "cuda not active" << std::endl; return; };
 
-ImageKernel::ImageKernel(const Image& img, unsigned int padding)
+ImageGPU::ImageGPU(const Image& img, unsigned int padding)
     : padding_(padding)
 {
     width_              = img.getWidth();
-    height_             = img.getHeight();
+    height_             = img.getHeigth();
     bufferSize_         = img.getBufferSize();
     bufferSizePadded_   = img.getPaddedBufferSize(padding_);
 
@@ -34,30 +34,16 @@ ImageKernel::ImageKernel(const Image& img, unsigned int padding)
     this->activateCuda();
     this->update(img);
     this->deactivateCuda();
-
-    /*cudaChannelFormatDesc channelDesc;
-
-    // Retrieve the channel format description from the cudaArray
-    cudaGetChannelDesc(&channelDesc, imgCudaArray_);
-
-    // Print the fields of the channel format description
-    std::cout << "Channel Format Description:" << std::endl;
-    std::cout << "x: " << channelDesc.x << std::endl;
-    std::cout << "y: " << channelDesc.y << std::endl;
-    std::cout << "z: " << channelDesc.z << std::endl;
-    std::cout << "w: " << channelDesc.w << std::endl;
-    std::cout << "f: " << channelDesc.f << std::endl;
-*/
 }
 
-ImageKernel::~ImageKernel()
+ImageGPU::~ImageGPU()
 {
     cudaFree((void*)imgPadCudaArray_);
     cudaGraphicsUnregisterResource(cudaPboResource_);
     glDeleteTextures(1, &texture_);
 }
 
-void ImageKernel::activateCuda()
+void ImageGPU::activateCuda()
 {
     if (cudaPboResource_ != nullptr)
     {
@@ -81,7 +67,7 @@ void ImageKernel::activateCuda()
     }
 }
 
-void ImageKernel::deactivateCuda()
+void ImageGPU::deactivateCuda()
 {
     cudaActive_ = false;
     if (cudaPboResource_ != nullptr)
@@ -91,7 +77,7 @@ void ImageKernel::deactivateCuda()
     cudaDeviceSynchronize();
 }
 
-void ImageKernel::update(const Image& img)
+void ImageGPU::update(const Image& img)
 {
     REQUIRE_CUDA
     if(img.getBufferSize() != bufferSize_)
@@ -109,7 +95,7 @@ void ImageKernel::update(const Image& img)
     cudaDeviceSynchronize();
 }
 
-void ImageKernel::readBack(const Image& img) const
+void ImageGPU::readBack(const Image& img) const
 {
     REQUIRE_CUDA
     /*this->checkCudaError(
@@ -118,7 +104,7 @@ void ImageKernel::readBack(const Image& img) const
     );*/
 }
 
-void ImageKernel::loadTexture()
+void ImageGPU::loadTexture()
 {
     // Pixel buffer object
     glGenBuffers(1, &pbo_);
@@ -151,7 +137,7 @@ void ImageKernel::loadTexture()
     cudaDeviceSynchronize();
 }
 
-bool ImageKernel::checkCudaError(cudaError_t ce, std::string msg) const
+bool ImageGPU::checkCudaError(cudaError_t ce, std::string msg) const
 {
     bool failure = ce != cudaSuccess;
     if(failure)
@@ -162,7 +148,7 @@ bool ImageKernel::checkCudaError(cudaError_t ce, std::string msg) const
     return failure;
 }
 
-void ImageKernel::imgToPadded()
+void ImageGPU::imgToPadded()
 {
     REQUIRE_CUDA
     /*
@@ -176,7 +162,7 @@ void ImageKernel::imgToPadded()
     );
 }
 
-void ImageKernel::convolution(unsigned int kernelSize, const std::vector<float>& kernel)
+void ImageGPU::convolution(unsigned int kernelSize, const std::vector<float>& kernel)
 {
     REQUIRE_CUDA
     unsigned int kernelValues = (kernelSize * 2 + 1) * (kernelSize * 2 + 1);
@@ -220,10 +206,10 @@ void ImageKernel::convolution(unsigned int kernelSize, const std::vector<float>&
         "cudaMemcpy kernel" 
     );
 
-    dim3 dimGrid(120, 72);
-    dim3 dimBlock(32, 30);
-    k_convolution<<<dimGrid, dimBlock>>>((RGB*)imgCudaArray_, (RGB*)imgPadCudaArray_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, width_, padding_);
-    this->checkCudaError(cudaGetLastError(), "k_convolution");
+    dim3 dimGrid(width_ / 32, height_ / 32);
+    dim3 dimBlock(32, 32);
+    kl_convolution(dimGrid, dimBlock, (RGB*)imgCudaArray_, (RGB*)imgPadCudaArray_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, width_, padding_);
+    this->checkCudaError(cudaGetLastError(), "kl_convolution");
 
     cudaDeviceSynchronize();
     cudaFree(relativeIdxsGPUptr);

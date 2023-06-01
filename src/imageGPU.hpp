@@ -7,11 +7,11 @@
 #include <glad/glad.h>
 #include <vector>
 
-class ImageKernel
+class ImageGPU
 {
 public:
-    ImageKernel(const Image& img, unsigned int padding);
-    ~ImageKernel();
+    ImageGPU(const Image& img, unsigned int padding);
+    ~ImageGPU();
     void activateCuda();
     void deactivateCuda();
     void update(const Image& img);

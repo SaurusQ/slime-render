@@ -4,8 +4,11 @@
 #include <math.h>
 
 Image::Image(unsigned int width, unsigned int heigth)
-    : width_(width), height_(heigth)
 {
+    // Image only handles values with a factor of 32
+    width_ = width + (width % 32);
+    height_ = heigth + (heigth % 32);
+
     pixels_ = width_ * height_;
     imagePtr_ = std::make_unique<RGB[]>(pixels_);
     std::fill(imagePtr_.get(), imagePtr_.get() + pixels_, RGB{0, 0, 0});
