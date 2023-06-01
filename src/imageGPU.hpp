@@ -52,8 +52,8 @@ private:
     std::unordered_map<int, float*> convKernelGPUptrs_;
 
     // Agent
-    Agent* agents_;
-    curandState* agentRandomState_;
+    Agent* agents_ = nullptr;
+    curandState* agentRandomState_ = nullptr;
     unsigned int nAgents_ = 0;
     float agentSpeed_ = 1.0;
 };

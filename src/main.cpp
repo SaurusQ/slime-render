@@ -114,8 +114,6 @@ int main()
     imgGPU.update(img);
     imgGPU.deactivateCuda();
     
-    
-    //std::vector<float> kernelData(2601, 1.0 / 2601.0);
     std::vector<float> kernelData = {
         1.0 / 256,  4.0 / 256,  6.0 / 256,  4.0 / 256,  1.0 / 256,
         4.0 / 256, 16.0 / 256, 24.0 / 256, 16.0 / 256,  4.0 / 256,
@@ -123,10 +121,11 @@ int main()
         4.0 / 256, 16.0 / 256, 24.0 / 256, 16.0 / 256,  4.0 / 256,
         1.0 / 256,  4.0 / 256,  6.0 / 256,  4.0 / 256,  1.0 / 256
     };
-    imgGPU.addConvKernel(1, kernelData);
+    imgGPU.addConvKernel(2, kernelData);
+    imgGPU.addConvKernel(1, std::vector<float>(9, 1.0 / 9.0));
 
-    imgGPU.configAgents(128);
-    imgGPU.configAgentParameters(0.5);
+    imgGPU.configAgents(4092);
+    imgGPU.configAgentParameters(3.0);
 
     unsigned int IMG_W = img.getWidth();
     unsigned int IMG_H = img.getHeigth();
@@ -146,7 +145,7 @@ int main()
         imgGPU.activateCuda();
         //img.randomize();
         //imgKernel.update(img);
-        //imgGPU.convolution(2, 1);
+        imgGPU.convolution(1, 1);
         imgGPU.updateAgents();
         imgGPU.deactivateCuda();
 
