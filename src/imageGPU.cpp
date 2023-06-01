@@ -42,6 +42,15 @@ ImageGPU::~ImageGPU()
     cudaFree((void*)imgPadCudaArray_);
     cudaGraphicsUnregisterResource(cudaPboResource_);
     glDeleteTextures(1, &texture_);
+
+    for (const auto& pair : convRelIdxsGPUptrs_)
+    {
+        cudaFree(pair.second);
+    }
+    for (const auto& pair : convKernelGPUptrs_)
+    {
+        cudaFree(pair.second);
+    }
 }
 
 void ImageGPU::activateCuda()
@@ -163,7 +172,21 @@ void ImageGPU::imgToPadded()
     );
 }
 
-void ImageGPU::convolution(unsigned int kernelSize, const std::vector<float>& kernel)
+void ImageGPU::addConvKernel(unsigned int kernelId, std::vector<float> kernel)
+{
+    float* kernelGPUptr;
+    this->checkCudaError(
+        cudaMalloc((void**)&kernelGPUptr, kernel.size() * sizeof(float)),
+        "cudaMalloc kernelGPUptr"
+    );
+    this->checkCudaError(
+        cudaMemcpy((void*)kernelGPUptr, kernel.data(), kernel.size() * sizeof(float), cudaMemcpyHostToDevice),
+        "cudaMemcpy kernel" 
+    );
+    convKernelGPUptrs_[kernelId] = kernelGPUptr;
+}
+
+void ImageGPU::convolution(unsigned int kernelSize, unsigned int kernelId)
 {
     REQUIRE_CUDA
     unsigned int kernelValues = (kernelSize * 2 + 1) * (kernelSize * 2 + 1);
@@ -172,16 +195,11 @@ void ImageGPU::convolution(unsigned int kernelSize, const std::vector<float>& ke
         std::cerr << "Too large kernel size for padding. Kernel: " << kernelSize << " Padding: " << padding_ << std::endl;
         return; 
     }
-    if(kernel.size() < kernelValues)
-    {
-        std::cerr << "Not enough variables on kernel" << std::endl;
-        return;
-    }
     this->imgToPadded();
-    
-    int* relativeIdxs;
-    auto it = convRelIdxMap.find(kernelSize);
-    if (it == convRelIdxMap.end())
+
+    int* relativeIdxsGPUptr = nullptr;
+    auto idxIt = convRelIdxsGPUptrs_.find(kernelSize);
+    if (idxIt == convRelIdxsGPUptrs_.end())
     {
         // Generate new relative idxs
         std::vector<int> newRelIdx;
@@ -193,32 +211,31 @@ void ImageGPU::convolution(unsigned int kernelSize, const std::vector<float>& ke
                 newRelIdx.push_back(x + y * static_cast<int>(padWidth_));
             }
         }
-        convRelIdxMap[kernelSize] = newRelIdx;
-        relativeIdxs = convRelIdxMap[kernelSize].data();
+
+        this->checkCudaError(
+            cudaMalloc((void**)&relativeIdxsGPUptr, kernelValues * sizeof(int)),
+            "cudaMalloc relativeIdxsGPUptr"
+        );
+        this->checkCudaError(
+            cudaMemcpy((void*)relativeIdxsGPUptr, newRelIdx.data(), kernelValues * sizeof(int), cudaMemcpyHostToDevice),
+            "cudaMemcpy relativeIdxs" 
+        );
+        convRelIdxsGPUptrs_[kernelSize] = relativeIdxsGPUptr;
     }
     else
     {
-        relativeIdxs = it->second.data();
+        relativeIdxsGPUptr = idxIt->second;
     }
 
-    int* relativeIdxsGPUptr = nullptr;
     float* kernelGPUptr = nullptr;
-    this->checkCudaError(
-        cudaMalloc((void**)&relativeIdxsGPUptr, kernelValues * sizeof(int)),
-        "cudaMalloc relativeIdxsGPUptr"
-    );
-    this->checkCudaError(
-        cudaMemcpy((void*)relativeIdxsGPUptr, relativeIdxs, kernelValues * sizeof(int), cudaMemcpyHostToDevice),
-        "cudaMemcpy relativeIdxs" 
-    );
-    this->checkCudaError(
-        cudaMalloc((void**)&kernelGPUptr, kernelValues * sizeof(float)),
-        "cudaMalloc kernelGPUptr"
-    );
-    this->checkCudaError(
-        cudaMemcpy((void*)kernelGPUptr, kernel.data(), kernelValues * sizeof(float), cudaMemcpyHostToDevice),
-        "cudaMemcpy kernel" 
-    );
+    auto kernelIt = convKernelGPUptrs_.find(kernelId);
+    if (kernelIt == convKernelGPUptrs_.end())
+    {
+        std::cout << "coudn't find kernel data call addConvKernel() to add more kernels" << std::endl;
+        return;
+    }
+    kernelGPUptr = kernelIt->second;
+
 
     dim3 dimGrid(width_ / 32, height_ / 32);
     dim3 dimBlock(32, 32);
@@ -226,6 +243,4 @@ void ImageGPU::convolution(unsigned int kernelSize, const std::vector<float>& ke
     this->checkCudaError(cudaGetLastError(), "kl_convolution");
 
     cudaDeviceSynchronize();
-    cudaFree(relativeIdxsGPUptr);
-    cudaFree(kernelGPUptr);
 }

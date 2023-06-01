@@ -21,7 +21,8 @@ public:
     GLuint getTexture() const { return texture_; }
     GLuint getPbo() const { return pbo_; }
     // Kernel starters
-    void convolution(unsigned int kernelSize, const std::vector<float>& kernel);
+    void addConvKernel(unsigned int kernelId, std::vector<float> kernel);
+    void convolution(unsigned int kernelSize, unsigned int kernelId);
 private:
     void loadTexture();
     bool checkCudaError(cudaError_t cs, std::string msg) const;
@@ -44,5 +45,6 @@ private:
     unsigned int padWidth_;
 
     // Convolution
-    std::unordered_map<int, std::vector<int>> convRelIdxMap;
+    std::unordered_map<int, int*> convRelIdxsGPUptrs_;
+    std::unordered_map<int, float*> convKernelGPUptrs_;
 };
