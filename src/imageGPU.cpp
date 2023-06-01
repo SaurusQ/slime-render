@@ -222,10 +222,11 @@ void ImageGPU::convolution(unsigned int kernelSize, unsigned int kernelId)
     }
     kernelGPUptr = kernelIt->second;
 
+    unsigned int padOffset = padding_ * padWidth_ + padding_;
 
     dim3 dimGrid(width_ / 32, height_ / 32);
     dim3 dimBlock(32, 32);
-    kl_convolution(dimGrid, dimBlock, (RGB*)imgCudaArray_, (RGB*)imgPadCudaArray_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, width_, padWidth_, padding_);
+    kl_convolution(dimGrid, dimBlock, (RGB*)imgCudaArray_, (RGB*)imgPadCudaArray_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, width_, padWidth_, padding_, padOffset);
     this->checkCudaError(cudaGetLastError(), "kl_convolution");
 
     cudaDeviceSynchronize();

@@ -10,7 +10,8 @@ void kl_convolution(dim3 grid, dim3 block,
     unsigned int kernelValues,
     unsigned int width,
     unsigned int padWidth,
-    unsigned int padding
+    unsigned int padding,
+    unsigned int padOffset
 );
 
 __global__ void k_convolution(
@@ -21,5 +22,6 @@ __global__ void k_convolution(
     unsigned int kernelValues,
     unsigned int width,
     unsigned int padWidth,
-    unsigned int padding
+    unsigned int padding,
+    unsigned int padOffset
 );
