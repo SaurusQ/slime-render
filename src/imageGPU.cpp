@@ -255,15 +255,25 @@ void ImageGPU::configAgents(unsigned int num)
     std::random_device rd;
     std::mt19937 rng(rd());
     std::uniform_real_distribution<float> dist(0.0, 2 * M_PI);
-    
+    std::uniform_real_distribution<float> randn(0.0, 1.0);
+
     std::unique_ptr<Agent[]> cpuAgents = std::make_unique<Agent[]>(nAgents_);
     
     for (int i = 0; i < nAgents_; i++)
     {
+        /*
         Agent a;
         a.pos = float2{width_ / 2.0f, height_ / 2.0f};
         a.angle = dist(rng);
+        cpuAgents[i] = a;*/
+
+        Agent a;
+        float r = std::sqrt(randn(rng)) * 500; // Radius
+        float x = randn(rng) * 2 * M_PI;
+        a.pos = float2{width_ / 2.0 + r * std::cos(x), height_ / 2.0 + r * std::sin(x)};
+        a.angle = dist(rng);
         cpuAgents[i] = a;
+
     }
     
     this-checkCudaError(
