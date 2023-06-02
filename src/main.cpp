@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <iostream>
 #include <sstream>
+#include <chrono>
+#include <thread>
 
 constexpr char wndName[] = "slime";
 
@@ -123,9 +125,14 @@ int main()
     };
     imgGPU.addConvKernel(2, kernelData);
     imgGPU.addConvKernel(1, std::vector<float>(9, 1.0 / 9.0));
+    imgGPU.addConvKernel(3, std::vector<float>{
+        0.8  / 9.0, 0.95 / 9.0, 0.8  / 9.0,
+        0.95 / 9.0, 2.0  / 9.0, 0.95 / 9.0,
+        0.8  / 9.0, 0.95 / 9.0, 0.8  / 9.0
+    });
 
     imgGPU.configAgents(250);
-    imgGPU.configAgentParameters(3.0);
+    imgGPU.configAgentParameters(1.0);
 
     unsigned int IMG_W = img.getWidth();
     unsigned int IMG_H = img.getHeigth();
@@ -134,6 +141,8 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+
         currentTime = glfwGetTime();
 
         processInput(window);
@@ -143,7 +152,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         imgGPU.activateCuda();
-        imgGPU.evaporate(0.03);
+        imgGPU.evaporate(0.002);
         imgGPU.convolution(1, 1);
         imgGPU.updateAgents();
         imgGPU.deactivateCuda();

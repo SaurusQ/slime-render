@@ -2,13 +2,13 @@
 
 #include <iostream>
 
-#define PI 3.141592654f
+#define PI 3.141592653589793f
 
 // TODO move everything here to proper configs
 __device__ float turnSpeed = 0.1;
-__device__ float sensorOffsetDst = 2.0;
-__device__ float sensorSize = 3.0;
-__device__ float sensorAngleSpacing = 0.3;
+__device__ float sensorOffsetDst = 9.0;
+__device__ float sensorSize = 0.0;
+__device__ float sensorAngleSpacing = 30.0 * (PI / 180.0);
 
 void kl_convolution(dim3 grid, dim3 block,
     RGB* imgPtr,
@@ -118,7 +118,7 @@ __global__ void k_updateAgents(
     if (agentIdx >= nAgents) return;
     Agent a = agents[agentIdx];
 
-    float2 direction = make_float2(cospi(a.angle), sinpi(a.angle));
+    float2 direction = make_float2(cosf(a.angle), sinf(a.angle));
     float2 newPos = make_float2(speed * direction.x + a.pos.x, speed * direction.y + a.pos.y); // TODO * deltaTime
 
     if (newPos.x < 0 || newPos.x >= width || newPos.y < 0 || newPos.y >= heigth)
@@ -132,13 +132,13 @@ __global__ void k_updateAgents(
 
     imgPtr[__float2uint_rd(newPos.x) + __float2uint_rd(newPos.y) * width] = RGB{1.0, 1.0, 1.0};
 
-
+    
     // Sense and turn
     float wf = sense(a, 0.0, imgPtr, width, heigth);
     float wl = sense(a, sensorAngleSpacing, imgPtr, width, heigth);
     float wr = sense(a, -sensorAngleSpacing, imgPtr, width, heigth);
 
-    float randomSteer = curand_uniform(randomState + threadIdx.x);
+    float randomSteer = 0.0;//= curand_uniform(randomState + threadIdx.x);
 
     if (wf > wl && wf > wr)
     {
@@ -160,14 +160,14 @@ __global__ void k_updateAgents(
 __device__ float sense(Agent a, float sensorAngleOffset, RGB* imgPtr, unsigned int width, unsigned int heigth)
 {
     float sensorAngle = a.angle + sensorAngleOffset;
-    float2 sensorDir = make_float2(cospi(sensorAngle), sinpi(sensorAngle));
+    float2 sensorDir = make_float2(cosf(sensorAngle), sinf(sensorAngle));
     int2 sensorCentre = make_int2(a.pos.x + sensorDir.x * sensorOffsetDst, a.pos.y + sensorDir.y * sensorOffsetDst);
     
     RGB sum = RGB{0.0, 0.0, 0.0};
 
-    for (int ox = -sensorSize; ox < sensorSize; ox++)
+    for (int ox = -sensorSize; ox <= sensorSize; ox++)
     {
-        for (int oy = -sensorSize; oy < sensorSize; oy++)
+        for (int oy = -sensorSize; oy <= sensorSize; oy++)
         {
             int2 pos = make_int2(sensorCentre.x + ox, sensorCentre.y + oy);
 
@@ -177,6 +177,8 @@ __device__ float sense(Agent a, float sensorAngleOffset, RGB* imgPtr, unsigned i
                 sum.r += imgPtr[idx].r;
                 sum.g += imgPtr[idx].g;
                 sum.b += imgPtr[idx].b;
+
+                //imgPtr[idx].r = 1.0; // MARK
             }
         }
     }
