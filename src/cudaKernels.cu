@@ -5,9 +5,9 @@
 #define PI 3.141592653589793f
 
 // TODO move everything here to proper configs
-__device__ float turnSpeed = 0.1;
+__device__ float turnSpeed = 45.0 * (PI / 180.0);
 __device__ float sensorOffsetDst = 9.0;
-__device__ float sensorSize = 0.0;
+__device__ float sensorSize = 1.0;
 __device__ float sensorAngleSpacing = 30.0 * (PI / 180.0);
 
 void kl_convolution(dim3 grid, dim3 block,
@@ -138,7 +138,7 @@ __global__ void k_updateAgents(
     float wl = sense(a, sensorAngleSpacing, imgPtr, width, heigth);
     float wr = sense(a, -sensorAngleSpacing, imgPtr, width, heigth);
 
-    float randomSteer = 0.0;//= curand_uniform(randomState + threadIdx.x);
+    float randomSteer = curand_uniform(randomState + threadIdx.x);
 
     if (wf > wl && wf > wr)
     {
