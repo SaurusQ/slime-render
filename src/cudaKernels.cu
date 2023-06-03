@@ -5,9 +5,9 @@
 #define PI 3.141592653589793f
 
 // TODO move everything here to proper configs
-__device__ float turnSpeed = 45.0 * (PI / 180.0);
+__device__ float turnSpeed = 90.0 * (PI / 180.0);
 __device__ float sensorOffsetDst = 9.0;
-__device__ float sensorSize = 1.0;
+__device__ float sensorSize = 0.0;
 __device__ float sensorAngleSpacing = 30.0 * (PI / 180.0);
 
 void kl_convolution(dim3 grid, dim3 block,
