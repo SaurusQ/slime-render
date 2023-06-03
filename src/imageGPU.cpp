@@ -268,7 +268,7 @@ void ImageGPU::configAgents(unsigned int num)
         cpuAgents[i] = a;*/
 
         Agent a;
-        float r = std::sqrt(randn(rng)) * 500; // Radius
+        float r = std::sqrt(randn(rng)) * 1000; // Radius
         float x = randn(rng) * 2 * M_PI;
         a.pos = float2{width_ / 2.0 + r * std::cos(x), height_ / 2.0 + r * std::sin(x)};
         a.angle = dist(rng);

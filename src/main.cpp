@@ -131,7 +131,7 @@ int main()
         0.2  / 9.0, 0.2  / 9.0, 0.2  / 9.0
     });
 
-    imgGPU.configAgents(25000);
+    imgGPU.configAgents(100000);
     imgGPU.configAgentParameters(1.0);
 
     unsigned int IMG_W = img.getWidth();
@@ -152,8 +152,8 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         imgGPU.activateCuda();
-        //imgGPU.evaporate(0.02);
-        imgGPU.evaporate(0.005);
+        //imgGPU.evaporate(0.2);
+        imgGPU.evaporate(0.007);
         imgGPU.convolution(1, 1);
         imgGPU.updateAgents();
         imgGPU.deactivateCuda();
