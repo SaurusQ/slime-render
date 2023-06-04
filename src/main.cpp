@@ -6,6 +6,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+#ifdef GUI
+    #include "UI.hpp"
+#endif
+
 #include <algorithm>
 #include <iostream>
 #include <sstream>
@@ -106,6 +110,10 @@ int main()
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
+#ifdef GUI
+    UI configUI(window);
+#endif
+
     Image img{W_4K, H_4K};
     ImageGPU imgGPU{img, 100};
     GLuint texture = imgGPU.getTexture();
@@ -172,6 +180,12 @@ int main()
         shaderHandler.use();
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        // Draw UI
+#ifdef GUI
+        std::cout << "update UI" << std::endl; 
+        configUI.update(window);
+#endif
 
         glfwSwapBuffers(window);
 
