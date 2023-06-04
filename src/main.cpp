@@ -3,7 +3,7 @@
 #include "shaderHandler.hpp"
 #include "definitions.hpp"
 
-#include <glad/glad.h>
+#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
 #ifdef GUI
@@ -81,7 +81,7 @@ int main()
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     // glad: load all OpenGL function pointers
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    if (!gladLoadGL(glfwGetProcAddress))
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
@@ -159,6 +159,12 @@ int main()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+#ifdef GUI
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+#endif
+
         imgGPU.activateCuda();
         //imgGPU.evaporate(0.2);
         imgGPU.evaporate(0.007);
@@ -183,7 +189,6 @@ int main()
 
         // Draw UI
 #ifdef GUI
-        std::cout << "update UI" << std::endl; 
         configUI.update(window);
 #endif
 
