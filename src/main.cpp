@@ -16,6 +16,8 @@
 #include <chrono>
 #include <thread>
 
+bool showUI = false;
+
 constexpr char wndName[] = "slime";
 
 float vertices[] = {
@@ -31,10 +33,12 @@ unsigned int indices[] = {
     2, 3, 0
 };
 
-void processInput(GLFWwindow *window)
+void key_callback(GLFWwindow* wnd, int key, int scancode, int action, int mods)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+        glfwSetWindowShouldClose(wnd, true);
+    if (key == GLFW_KEY_M && action == GLFW_PRESS)
+        showUI = !showUI;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -79,6 +83,7 @@ int main()
     glfwMakeContextCurrent(window);
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetKeyCallback(window, key_callback);
 
     // glad: load all OpenGL function pointers
     if (!gladLoadGL(glfwGetProcAddress))
@@ -153,8 +158,6 @@ int main()
 
         currentTime = glfwGetTime();
 
-        processInput(window);
-
         fpsHandler(currentTime, window);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -183,7 +186,10 @@ int main()
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
 #ifdef GUI
-        configUI.update(window);
+        if (showUI)
+        {
+            configUI.update(window);
+        }
 #endif
 
         glfwSwapBuffers(window);
