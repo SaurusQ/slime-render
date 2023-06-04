@@ -9,7 +9,7 @@ BUILD_DIR_IMGUI := build/imgui
 TARGET := slime.exe
 IMGUI_DIR := lib/imgui
 
-SRCS := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*.cu) $(wildcard lib/glad/src/glad.c)
+SRCS := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*.cu) lib/glad/src/gl.c
 IMGUI_SRCS := $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
 
 ifeq ($(filter gui,$(MAKECMDGOALS)),gui)
