@@ -6,8 +6,8 @@ UI::UI(GLFWwindow* wnd)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    //ImGui::StyleColorsDark();
-    ImGui::StyleColorsLight();
+    ImGui::StyleColorsDark();
+    //ImGui::StyleColorsLight();
 
     ImGui_ImplGlfw_InitForOpenGL(wnd, true);
     ImGui_ImplOpenGL3_Init("#version 330 core");
@@ -22,13 +22,16 @@ UI::~UI()
 
 void UI::update(GLFWwindow*wnd)
 {
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
 
+    // Draw UI
     bool show_demo_window = true;
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     ImGuiIO& io = ImGui::GetIO();
 
-    // Information for the menu
     {
         static float f = 0.0f;
         static int counter = 0;
@@ -51,12 +54,7 @@ void UI::update(GLFWwindow*wnd)
         ImGui::End();
     }
 
-    // Rendering
+    // Render UI
     ImGui::Render();
-    //int dW, dH;
-    //glfwGetFramebufferSize(wnd, &dW, &dH);
-    //glViewport(0, 0, dW, dH);
-    //glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
-    //glClear(GL_COLOR_BUFFER_BIT);
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
