@@ -159,19 +159,12 @@ int main()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-#ifdef GUI
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-#endif
-
         imgGPU.activateCuda();
         //imgGPU.evaporate(0.2);
         imgGPU.evaporate(0.007);
         imgGPU.convolution(1, 1);
         imgGPU.updateAgents();
         imgGPU.deactivateCuda();
-
 
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, imgGPU.getPbo());
 
@@ -187,7 +180,8 @@ int main()
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        // Draw UI
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+
 #ifdef GUI
         configUI.update(window);
 #endif
