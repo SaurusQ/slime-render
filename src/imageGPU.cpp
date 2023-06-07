@@ -6,7 +6,6 @@
 #include <iostream>
 #include <stdexcept>
 #include <random>
-#include <cmath>
 
 #define REQUIRE_CUDA if(!cudaActive_) { std::cout << "cuda not active" << std::endl; return; };
 
@@ -294,15 +293,16 @@ void ImageGPU::configAgents(unsigned int num)
     kl_initCurand32(grid, block, agentRandomState_);
 }
 
-void ImageGPU::configAgentParameters(float speed)
-{
-    agentSpeed_ = speed;
-}
-
 void ImageGPU::updateAgents()
 {
     REQUIRE_CUDA
     dim3 grid(std::ceil(nAgents_ / 32.0), 1);
     dim3 block(32, 1);
-    kl_updateAgents(grid, block, agentRandomState_, imgCudaArray_, agents_, nAgents_, agentSpeed_, width_, height_);
+    kl_updateAgents(grid, block, agentRandomState_, imgCudaArray_, agents_, nAgents_,
+        agentConfig_.speed,
+        agentConfig_.turnSpeed,
+        agentConfig_.sensorAngleSpacing,
+        agentConfig_.sensorOffsetDst,
+        agentConfig_.sensorSize,
+        width_, height_);
 }

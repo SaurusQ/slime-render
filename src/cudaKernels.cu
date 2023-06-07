@@ -4,12 +4,6 @@
 
 #define PI 3.141592653589793f
 
-// TODO move everything here to proper configs
-__device__ float turnSpeed = 90.0 * (PI / 180.0);
-__device__ float sensorOffsetDst = 9.0;
-__device__ float sensorSize = 0.0;
-__device__ float sensorAngleSpacing = 30.0 * (PI / 180.0);
-
 void kl_convolution(dim3 grid, dim3 block,
     RGB* imgPtr,
     RGB* imgPadPtr,
@@ -97,11 +91,15 @@ void kl_updateAgents(dim3 grid, dim3 block,
     Agent* agents,
     unsigned int nAgents,
     float speed,
+    float turnSpeed,
+    float sensorAngleSpacing,
+    float sensorOffsetDst,
+    unsigned int sensorSize,
     unsigned int width,
     unsigned int heigth
 )
 {
-    k_updateAgents<<<grid, block>>>(randomState, imgPtr, agents, nAgents, speed, width, heigth);
+    k_updateAgents<<<grid, block>>>(randomState, imgPtr, agents, nAgents, speed, turnSpeed, sensorAngleSpacing, sensorOffsetDst, sensorSize, width, heigth);
 }
 
 __global__ void k_updateAgents(
@@ -110,6 +108,10 @@ __global__ void k_updateAgents(
     Agent* agents,
     unsigned int nAgents,
     float speed,
+    float turnSpeed,
+    float sensorAngleSpacing,
+    float sensorOffsetDst,
+    unsigned int sensorSize,
     unsigned int width,
     unsigned int heigth
 )
@@ -134,9 +136,9 @@ __global__ void k_updateAgents(
 
     
     // Sense and turn
-    float wf = sense(a, 0.0, imgPtr, width, heigth);
-    float wl = sense(a, sensorAngleSpacing, imgPtr, width, heigth);
-    float wr = sense(a, -sensorAngleSpacing, imgPtr, width, heigth);
+    float wf = sense(a,                 0.0, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
+    float wl = sense(a,  sensorAngleSpacing, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
+    float wr = sense(a, -sensorAngleSpacing, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
 
     float randomSteer = curand_uniform(randomState + threadIdx.x);
 
@@ -157,7 +159,7 @@ __global__ void k_updateAgents(
     }
 }
 
-__device__ float sense(Agent a, float sensorAngleOffset, RGB* imgPtr, unsigned int width, unsigned int heigth)
+__device__ float sense(Agent a, float sensorAngleOffset, RGB* imgPtr, float sensorOffsetDst, int sensorSize, unsigned int width, unsigned int heigth)
 {
     float sensorAngle = a.angle + sensorAngleOffset;
     float2 sensorDir = make_float2(cosf(sensorAngle), sinf(sensorAngle));

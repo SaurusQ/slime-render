@@ -145,7 +145,11 @@ int main()
     });
 
     imgGPU.configAgents(100000);
-    imgGPU.configAgentParameters(1.0);
+    imgGPU.configAgentSpeed(1.0);
+    imgGPU.configAgentTurnSpeed(90.0);
+    imgGPU.configAgentSensorSize(0.0);
+    imgGPU.configAgentSensorOffsetDst(9.0);
+    imgGPU.configAgentSensorAngleSpacing(30.0);
 
     unsigned int IMG_W = img.getWidth();
     unsigned int IMG_H = img.getHeigth();
