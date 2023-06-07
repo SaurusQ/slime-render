@@ -43,4 +43,5 @@ struct ImgConfig
     AgentConfig ac;
     float evaporate;
     float diffuse;
+    bool updateAgents;
 };

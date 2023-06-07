@@ -27,7 +27,8 @@ ImgConfig imgConfig
         0
     },
     0.007,
-    1.0
+    1.0,
+    true
 };
 
 bool showUI = false;
@@ -137,8 +138,8 @@ int main()
     ImageGPU imgGPU{img, 100};
     GLuint texture = imgGPU.getTexture();
     imgGPU.activateCuda();
-    //img.drawCircle(1000, 1000, 500 , RGB{1.0, 0, 0});
     img.setColor(RGB{0.0, 0.0, 0.0});
+    //img.drawCircle(100, 1, 10, RGB{1.0, 0, 0});
     //img.randomize();
     imgGPU.update(img);
     imgGPU.deactivateCuda();
@@ -158,7 +159,7 @@ int main()
         0.2  / 9.0, 0.2  / 9.0, 0.2  / 9.0
     });
 
-    imgGPU.configAgents(100000);
+    imgGPU.configAgents(1000000);
     imgGPU.configAgentParameters(imgConfig.ac);
 
     unsigned int IMG_W = img.getWidth();
@@ -168,7 +169,7 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
-        //std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
         currentTime = glfwGetTime();
 
@@ -176,12 +177,14 @@ int main()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        imgGPU.activateCuda();
-        //imgGPU.evaporate(0.2);
-        imgGPU.evaporate(imgConfig.evaporate);
-        imgGPU.convolution(1, 1); // imgConfig.diffuse
-        imgGPU.updateAgents();
-        imgGPU.deactivateCuda();
+        if (imgConfig.updateAgents)
+        {
+            imgGPU.activateCuda();
+            imgGPU.convolution(1, 1, imgConfig.diffuse);
+            imgGPU.evaporate(imgConfig.evaporate);
+            imgGPU.updateAgents();
+            imgGPU.deactivateCuda();
+        }
 
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, imgGPU.getPbo());
 

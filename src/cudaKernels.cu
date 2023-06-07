@@ -10,13 +10,14 @@ void kl_convolution(dim3 grid, dim3 block,
     int* relativeIdxs,
     float* kernel,
     unsigned int kernelValues,
+    float convWeight,
     unsigned int width,
     unsigned int padWidth,
     unsigned int padding,
     unsigned int padOffset
 )
 {
-    k_convolution<<<grid, block>>>(imgPtr, imgPadPtr, relativeIdxs, kernel, kernelValues, width, padWidth, padding, padOffset);
+    k_convolution<<<grid, block>>>(imgPtr, imgPadPtr, relativeIdxs, kernel, kernelValues, convWeight, width, padWidth, padding, padOffset);
 }
 
 __global__ void k_convolution(
@@ -25,6 +26,7 @@ __global__ void k_convolution(
     int* relativeIdxs,
     float* kernel,
     unsigned int kernelValues,
+    float convWeight,
     unsigned int width,
     unsigned int padWidth,
     unsigned int padding,
@@ -63,10 +65,22 @@ __global__ void k_convolution(
         valueB += imgPadPtr[idxPad + relativeIdxs[i]].b * kernel[i];
     }    
 
-    imgPtr[idx].r = valueR;
-    imgPtr[idx].g = valueG;
-    imgPtr[idx].b = valueB;
-    
+    imgPtr[idx].r = imgPadPtr[idxPad].r * (1 - convWeight) + valueR * (convWeight);
+    imgPtr[idx].g = imgPadPtr[idxPad].g * (1 - convWeight) + valueG * (convWeight);
+    imgPtr[idx].b = imgPadPtr[idxPad].b * (1 - convWeight) + valueB * (convWeight);
+
+
+    if (idxPad + relativeIdxs[0] < -1) printf("too fucking small");
+    if (idxPad + relativeIdxs[8] >= (padding * 2 + 320) * (padding * 2 + 180));
+    /*
+    if (imgPtr[idx].r > 0.1)
+    {
+        printf("found %f, x: %i y: %i idxs: %i, %i, %i | %i, %i, %i | %i, %i, %i\n", imgPtr[idx].r, x, y,
+        idxPad + relativeIdxs[0], idxPad + relativeIdxs[1], idxPad + relativeIdxs[2],
+        idxPad + relativeIdxs[3], idxPad + relativeIdxs[4], idxPad + relativeIdxs[5],
+        idxPad + relativeIdxs[6], idxPad + relativeIdxs[7], idxPad + relativeIdxs[8]
+    );
+    }*/
 }
 
 void kl_evaporate(dim3 grid, dim3 block, RGB* imgPtr, float strength, unsigned int width)
