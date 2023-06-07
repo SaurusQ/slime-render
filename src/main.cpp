@@ -16,6 +16,20 @@
 #include <chrono>
 #include <thread>
 
+ImgConfig imgConfig
+{
+    AgentConfig
+    {
+        1.0,
+        90.0,
+        30.0,
+        9.0,
+        0
+    },
+    0.007,
+    1.0
+};
+
 bool showUI = false;
 
 constexpr char wndName[] = "slime";
@@ -144,12 +158,9 @@ int main()
         0.2  / 9.0, 0.2  / 9.0, 0.2  / 9.0
     });
 
+
     imgGPU.configAgents(100000);
-    imgGPU.configAgentSpeed(1.0);
-    imgGPU.configAgentTurnSpeed(90.0);
-    imgGPU.configAgentSensorSize(0.0);
-    imgGPU.configAgentSensorOffsetDst(9.0);
-    imgGPU.configAgentSensorAngleSpacing(30.0);
+    imgGPU.configAgentParameters(imgConfig.ac);
 
     unsigned int IMG_W = img.getWidth();
     unsigned int IMG_H = img.getHeigth();
@@ -168,8 +179,8 @@ int main()
 
         imgGPU.activateCuda();
         //imgGPU.evaporate(0.2);
-        imgGPU.evaporate(0.007);
-        imgGPU.convolution(1, 1);
+        imgGPU.evaporate(imgConfig.evaporate);
+        imgGPU.convolution(1, 1); // imgConfig.diffuse
         imgGPU.updateAgents();
         imgGPU.deactivateCuda();
 

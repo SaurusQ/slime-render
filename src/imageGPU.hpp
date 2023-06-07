@@ -28,6 +28,13 @@ public:
     void evaporate(float strength);
     void configAgents(unsigned int num);
     
+    void configAgentParameters(AgentConfig ac) { 
+        this->configAgentSpeed(ac.speed); 
+        this->configAgentTurnSpeed(ac.turnSpeed); 
+        this->configAgentSensorAngleSpacing(ac.sensorAngleSpacing); 
+        this->configAgentSensorOffsetDst(ac.sensorOffsetDst);
+        this->configAgentSensorSize(ac.sensorSize);
+    }
     void configAgentSpeed(float speed) { agentConfig_.speed = speed; }
     void configAgentTurnSpeed(float turnSpeed) { agentConfig_.turnSpeed = turnSpeed * (M_PI / 180.0); }
     void configAgentSensorAngleSpacing(float sensorAngleSpacing) { agentConfig_.sensorAngleSpacing = sensorAngleSpacing * (M_PI / 180.0); }
@@ -61,11 +68,12 @@ private:
 
     // Agent
     Agent* agents_ = nullptr;
-    AgentConfig agentConfig_ = {
+    AgentConfig_I agentConfig_ = {
+        1.0,
         90.0 * (M_PI / 180.0),
+        30.0 * (M_PI / 180.0),
         9.0,
-        0.0,
-        30.0 * (M_PI / 180.0)
+        0
     };
     curandState* agentRandomState_ = nullptr;
     unsigned int nAgents_ = 0;
