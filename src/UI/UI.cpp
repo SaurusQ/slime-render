@@ -32,26 +32,29 @@ void UI::update(GLFWwindow*wnd, ImgConfig& ic)
 
     int sensorSize = ic.ac.sensorSize;
 
-    int counter = 0;
     {
         ImGui::Begin("Hello, world!");
         
         if (ImGui::CollapsingHeader("Agent config", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            ImGui::DragFloat("speed", &ic.ac.speed, 1.0, 0.0, 10.0);
+            ImGui::DragFloat("speed", &ic.ac.speed, 0.001, 0.0, 10.0);
             ImGui::SliderFloat("turn speed", &ic.ac.turnSpeed, 0.0, 180.0);
             ImGui::SliderFloat("sensor angle", &ic.ac.sensorAngleSpacing, 22.5, 45.0);
             ImGui::SliderFloat("sensor offset", &ic.ac.sensorOffsetDst, 1.0, 50.0);
             ImGui::SliderInt("sensor size", &sensorSize, 0, 10.0);
 
         }
-        ImGui::SliderFloat("evaporate", &ic.evaporate, 0.1, 0.001);
+        ImGui::SliderFloat("evaporate", &ic.evaporate, 0.1, 0.0001);
         ImGui::SliderFloat("diffuse", &ic.diffuse, 0.0, 1.0);
-
-        if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-            counter++;
-        ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
+        
+        if (ic.updateAgents)
+        {
+            if (ImGui::Button("Pause")) ic.updateAgents = false;
+        }
+        else
+        {
+            if (ImGui::Button("Run")) ic.updateAgents = true;
+        }
 
         ImGui::End();
     }

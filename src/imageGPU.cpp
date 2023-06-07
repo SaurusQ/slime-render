@@ -80,7 +80,6 @@ void ImageGPU::deactivateCuda()
     {
         cudaGraphicsUnmapResources(1, &cudaPboResource_, 0);
     }
-    cudaDeviceSynchronize();
 }
 
 void ImageGPU::update(const Image& img)
@@ -174,7 +173,7 @@ void ImageGPU::addConvKernel(unsigned int kernelId, std::vector<float> kernel)
     convKernelGPUptrs_[kernelId] = kernelGPUptr;
 }
 
-void ImageGPU::convolution(unsigned int kernelSize, unsigned int kernelId)
+void ImageGPU::convolution(unsigned int kernelSize, unsigned int kernelId, float convWeight)
 {
     REQUIRE_CUDA
     unsigned int kernelValues = (kernelSize * 2 + 1) * (kernelSize * 2 + 1);
@@ -228,7 +227,7 @@ void ImageGPU::convolution(unsigned int kernelSize, unsigned int kernelId)
 
     dim3 grid(width_ / 32, height_ / 32);
     dim3 block(32, 32);
-    kl_convolution(grid, block, (RGB*)imgCudaArray_, (RGB*)imgPadCudaArray_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, width_, padWidth_, padding_, padOffset);
+    kl_convolution(grid, block, (RGB*)imgCudaArray_, (RGB*)imgPadCudaArray_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, convWeight, width_, padWidth_, padding_, padOffset);
     this->checkCudaError(cudaGetLastError(), "kl_convolution");
 
     cudaDeviceSynchronize();
