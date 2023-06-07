@@ -20,39 +20,43 @@ UI::~UI()
     ImGui::DestroyContext();
 }
 
-void UI::update(GLFWwindow*wnd)
+void UI::update(GLFWwindow*wnd, ImgConfig& ic)
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
     // Draw UI
-    bool show_demo_window = true;
-    bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     ImGuiIO& io = ImGui::GetIO();
 
+    int sensorSize = ic.ac.sensorSize;
+
+    int counter = 0;
     {
-        static float f = 0.0f;
-        static int counter = 0;
+        ImGui::Begin("Hello, world!");
+        
+        if (ImGui::CollapsingHeader("Agent config", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::DragFloat("speed", &ic.ac.speed, 1.0, 0.0, 10.0);
+            ImGui::SliderFloat("turn speed", &ic.ac.turnSpeed, 0.0, 180.0);
+            ImGui::SliderFloat("sensor angle", &ic.ac.sensorAngleSpacing, 22.5, 45.0);
+            ImGui::SliderFloat("sensor offset", &ic.ac.sensorOffsetDst, 1.0, 50.0);
+            ImGui::SliderInt("sensor size", &sensorSize, 0, 10.0);
 
-        ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-        ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-        ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-        ImGui::Checkbox("Another Window", &show_another_window);
-
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+        }
+        ImGui::SliderFloat("evaporate", &ic.evaporate, 0.1, 0.001);
+        ImGui::SliderFloat("diffuse", &ic.diffuse, 0.0, 1.0);
 
         if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
             counter++;
         ImGui::SameLine();
         ImGui::Text("counter = %d", counter);
 
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
         ImGui::End();
     }
+
+    ic.ac.sensorSize = sensorSize;
 
     // Render UI
     ImGui::Render();
