@@ -158,7 +158,6 @@ int main()
         0.2  / 9.0, 0.2  / 9.0, 0.2  / 9.0
     });
 
-
     imgGPU.configAgents(100000);
     imgGPU.configAgentParameters(imgConfig.ac);
 
@@ -203,7 +202,8 @@ int main()
 #ifdef GUI
         if (showUI)
         {
-            configUI.update(window);
+            configUI.update(window, imgConfig);
+            imgGPU.configAgentParameters(imgConfig.ac);
         }
 #endif
 
