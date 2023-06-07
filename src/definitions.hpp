@@ -26,3 +26,13 @@ struct Agent
     float2 pos;
     float angle;
 };
+
+struct AgentConfig
+{
+    float speed;
+    float turnSpeed;
+    float sensorAngleSpacing;
+    float sensorOffsetDst;
+    unsigned int sensorSize;
+};
+

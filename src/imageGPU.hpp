@@ -8,7 +8,8 @@
 #include <glad/gl.h>
 
 #include <vector>
-#include <unordered_map> 
+#include <unordered_map>
+#include <cmath>
 
 class ImageGPU
 {
@@ -26,7 +27,13 @@ public:
     void convolution(unsigned int kernelSize, unsigned int kernelId);
     void evaporate(float strength);
     void configAgents(unsigned int num);
-    void configAgentParameters(float speed);
+    
+    void configAgentSpeed(float speed) { agentConfig_.speed = speed; }
+    void configAgentTurnSpeed(float turnSpeed) { agentConfig_.turnSpeed = turnSpeed * (M_PI / 180.0); }
+    void configAgentSensorAngleSpacing(float sensorAngleSpacing) { agentConfig_.sensorAngleSpacing = sensorAngleSpacing * (M_PI / 180.0); }
+    void configAgentSensorOffsetDst(float sensorOffsetDst) { agentConfig_.sensorOffsetDst = sensorOffsetDst; }
+    void configAgentSensorSize(float sensorSize) { agentConfig_.sensorSize = sensorSize; }
+    
     void updateAgents();
 private:
     void loadTexture();
@@ -54,6 +61,12 @@ private:
 
     // Agent
     Agent* agents_ = nullptr;
+    AgentConfig agentConfig_ = {
+        90.0 * (M_PI / 180.0),
+        9.0,
+        0.0,
+        30.0 * (M_PI / 180.0)
+    };
     curandState* agentRandomState_ = nullptr;
     unsigned int nAgents_ = 0;
     float agentSpeed_ = 1.0;
