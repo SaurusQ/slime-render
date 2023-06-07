@@ -36,3 +36,11 @@ struct AgentConfig
     unsigned int sensorSize;
 };
 
+typedef AgentConfig AgentConfig_I;
+
+struct ImgConfig
+{
+    AgentConfig ac;
+    float evaporate;
+    float diffuse;
+};
