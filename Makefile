@@ -1,7 +1,7 @@
 
 CC := nvcc
 CFLAGS := -I src -I lib/glad/include
-IFLAGS := -I lib/imgui -I lib/imgui/backends -DGUI -I src/UI
+IFLAGS := -I lib/imgui -I lib/imgui/backends -DGUI -I src/UI -I lib
 LIBS := -lglfw -lGL
 SRC_DIR := src
 BUILD_DIR := build

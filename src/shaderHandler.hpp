@@ -3,6 +3,7 @@
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <string>
+#include <vector>
 
 class ShaderHandler
 {
@@ -12,6 +13,7 @@ public:
     bool addShader(std::string filename, int shaderType);
     void link();
     void use();
+    GLuint getShaderProgramId() const { return shaderProgram_; }
 private:
     GLuint shaderProgram_;
 };

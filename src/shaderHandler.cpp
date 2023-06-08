@@ -43,6 +43,7 @@ bool ShaderHandler::addShader(std::string filename, int shaderType)
     // Add shader
     glAttachShader(shaderProgram_, shader);
     glDeleteShader(shader);
+
     return true;
 }
 
