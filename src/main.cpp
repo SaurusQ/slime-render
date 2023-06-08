@@ -5,6 +5,9 @@
 
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #ifdef GUI
     #include "UI.hpp"
@@ -28,12 +31,19 @@ ImgConfig imgConfig
     },
     0.007,
     1.0,
-    true
+    false
 };
 
 bool showUI = false;
+bool dragMouse = false;
+
+float translateY = 0.0;
+float translateX =  0.0;
+float zoom = 1.0;
 
 constexpr char wndName[] = "slime";
+
+ShaderHandler* shaderHandlerPtr;
 
 float vertices[] = {
     // Positions        // Texture Coordinates
@@ -48,12 +58,70 @@ unsigned int indices[] = {
     2, 3, 0
 };
 
+void printMat(glm::mat4 matrix, std::string name)
+{
+    std::cout << name << std::endl;
+    const float* ptr = glm::value_ptr(matrix);
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            std::cout << ptr[i + j * 4] << " ";
+        }
+        std::cout << std::endl;
+    }
+}
+
+void updateViewMatrix()
+{
+    glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(translateX, translateY, 0.0f));
+    glm::mat4 projection = glm::ortho(-1.0 * zoom, 1.0 * zoom, -1.0 * zoom, 1.0 * zoom, 1.0, -1.0);
+    GLint shaderProgram = shaderHandlerPtr->getShaderProgramId();
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+}
+
 void key_callback(GLFWwindow* wnd, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(wnd, true);
     if (key == GLFW_KEY_M && action == GLFW_PRESS)
         showUI = !showUI;
+    if (key == GLFW_KEY_C && action == GLFW_PRESS)
+        imgConfig.updateAgents = !imgConfig.updateAgents;
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+    {
+        zoom = 1.0;
+        translateX = 0.0;
+        translateY = 0.0;
+    }
+}
+
+void scroll_callback(GLFWwindow* wnd, double xoffset, double yoffset)
+{
+    zoom = std::max(0.01, zoom + yoffset * 0.04 * zoom);
+}
+
+void mouseButton_callback(GLFWwindow* wnd, int button, int action, int mods)
+{
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+        dragMouse = true;
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+        dragMouse = false;
+}
+
+void cursor_callback(GLFWwindow* wnd, double xpos, double ypos)
+{
+    static double lasty = ypos;
+    static double lastx = xpos;
+
+    double diffx = xpos - lastx;
+    double diffy = ypos - lasty;
+    if (dragMouse && !showUI)
+    {
+        translateX += diffx * 0.001 * zoom;
+        translateY -= diffy * 0.001 * zoom;
+    }
+    lasty = ypos;
+    lastx = xpos;
 }
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -99,6 +167,9 @@ int main()
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetKeyCallback(window, key_callback);
+    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetMouseButtonCallback(window, mouseButton_callback);
+    glfwSetCursorPosCallback(window, cursor_callback);
 
     // glad: load all OpenGL function pointers
     if (!gladLoadGL(glfwGetProcAddress))
@@ -112,6 +183,7 @@ int main()
     shaderHandler.addShader("shaders/fragment.frag", GL_FRAGMENT_SHADER);
     shaderHandler.addShader("shaders/vertex.vert", GL_VERTEX_SHADER);
     shaderHandler.link();
+    shaderHandlerPtr = &shaderHandler;
 
     unsigned int VBO, VAO, EBO;
     glGenBuffers(1, &VBO);
@@ -197,6 +269,7 @@ int main()
 
         // Render a VAO that cover the screen
         shaderHandler.use();
+        updateViewMatrix();
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
