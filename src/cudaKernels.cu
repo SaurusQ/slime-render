@@ -39,21 +39,6 @@ __global__ void k_convolution(
     int idxPad = padOffset + x + y * padWidth;
     int idx = x + y * width; 
 
-    //imgPtr[(idx + 1) % (3840 * 2160)] = imgPadPtr[idxPad];
-
-    //imgPtr[idx] = imgPadPtr[(padding * (2 * padding + width) + padding) + x + y * (width + 2 * padding)];
-
-    /*
-    unsigned int count = 0;
-    for(int i = 0; i < (3840 + 2 * padding) * (2160 + 2 * padding); i++)
-    {
-        if(imgPadPtr[i].r >= 0.5) count++;
-    }
-
-    printf("count: %u", count);
-    */
-    
-    
     float valueR = 0;
     float valueG = 0;
     float valueB = 0;
@@ -68,19 +53,6 @@ __global__ void k_convolution(
     imgPtr[idx].r = imgPadPtr[idxPad].r * (1 - convWeight) + valueR * (convWeight);
     imgPtr[idx].g = imgPadPtr[idxPad].g * (1 - convWeight) + valueG * (convWeight);
     imgPtr[idx].b = imgPadPtr[idxPad].b * (1 - convWeight) + valueB * (convWeight);
-
-
-    if (idxPad + relativeIdxs[0] < -1) printf("too fucking small");
-    if (idxPad + relativeIdxs[8] >= (padding * 2 + 320) * (padding * 2 + 180));
-    /*
-    if (imgPtr[idx].r > 0.1)
-    {
-        printf("found %f, x: %i y: %i idxs: %i, %i, %i | %i, %i, %i | %i, %i, %i\n", imgPtr[idx].r, x, y,
-        idxPad + relativeIdxs[0], idxPad + relativeIdxs[1], idxPad + relativeIdxs[2],
-        idxPad + relativeIdxs[3], idxPad + relativeIdxs[4], idxPad + relativeIdxs[5],
-        idxPad + relativeIdxs[6], idxPad + relativeIdxs[7], idxPad + relativeIdxs[8]
-    );
-    }*/
 }
 
 void kl_evaporate(dim3 grid, dim3 block, RGB* imgPtr, float strength, unsigned int width)
@@ -134,26 +106,11 @@ __global__ void k_updateAgents(
     if (agentIdx >= nAgents) return;
     Agent a = agents[agentIdx];
 
-    float2 direction = make_float2(cosf(a.angle), sinf(a.angle));
-    float2 newPos = make_float2(speed * direction.x + a.pos.x, speed * direction.y + a.pos.y); // TODO * deltaTime
-
-    if (newPos.x < 0 || newPos.x >= width || newPos.y < 0 || newPos.y >= heigth)
-    {
-        newPos.x = min(width - 0.01, max(0.0, newPos.x));
-        newPos.y = min(heigth - 0.01, max(0.0, newPos.y));
-        agents[agentIdx].angle = curand_uniform(randomState + threadIdx.x) * 2 * PI;
-    }
-    
-    agents[agentIdx].pos = newPos;
-
-    imgPtr[__float2uint_rd(newPos.x) + __float2uint_rd(newPos.y) * width] = RGB{1.0, 1.0, 1.0};
-
-    
     // Sense and turn
     float wf = sense(a,                 0.0, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
     float wl = sense(a,  sensorAngleSpacing, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
     float wr = sense(a, -sensorAngleSpacing, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
-
+    
     float randomSteer = curand_uniform(randomState + threadIdx.x);
 
     if (wf > wl && wf > wr)
@@ -171,6 +128,21 @@ __global__ void k_updateAgents(
     {
         agents[agentIdx].angle += randomSteer * turnSpeed; // TODO * deltaTime
     }
+
+    // Update position
+    float2 direction = make_float2(cosf(a.angle), sinf(a.angle));
+    float2 newPos = make_float2(speed * direction.x + a.pos.x, speed * direction.y + a.pos.y); // TODO * deltaTime
+
+    if (newPos.x < 0 || newPos.x >= width || newPos.y < 0 || newPos.y >= heigth)
+    {
+        newPos.x = min(width - 0.01, max(0.0, newPos.x));
+        newPos.y = min(heigth - 0.01, max(0.0, newPos.y));
+        agents[agentIdx].angle = curand_uniform(randomState + threadIdx.x) * 2 * PI;
+    }
+    // TODO trailweight
+    agents[agentIdx].pos = newPos;
+
+    imgPtr[__float2uint_rd(newPos.x) + __float2uint_rd(newPos.y) * width] = RGB{1.0, 1.0, 1.0};
 }
 
 __device__ float sense(Agent a, float sensorAngleOffset, RGB* imgPtr, float sensorOffsetDst, int sensorSize, unsigned int width, unsigned int heigth)
