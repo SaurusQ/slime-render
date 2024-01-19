@@ -46,7 +46,8 @@ void UI::update(GLFWwindow*wnd, ImgConfig& ic)
         }
         ImGui::SliderFloat("evaporate", &ic.evaporate, 0.1, 0.0001);
         ImGui::SliderFloat("diffuse", &ic.diffuse, 0.0, 1.0);
-        
+        ImGui::SliderInt("Particles", &ic.numAgents, 256, 200000);
+
         if (ic.updateAgents)
         {
             if (ImGui::Button("Pause")) ic.updateAgents = false;
@@ -55,6 +56,13 @@ void UI::update(GLFWwindow*wnd, ImgConfig& ic)
         {
             if (ImGui::Button("Run")) ic.updateAgents = true;
         }
+        
+        ImGui::Text("Reset Spawn");
+        if(ImGui::Button("Random")) ic.startFormation = StartFormation::RANDOM; 
+        ImGui::SameLine();
+        if(ImGui::Button("Middle")) ic.startFormation = StartFormation::MIDDLE;
+        ImGui::SameLine();
+        if(ImGui::Button("Circle")) ic.startFormation = StartFormation::CIRCLE;
 
         ImGui::End();
     }

@@ -11,12 +11,6 @@
 #include <unordered_map>
 #include <cmath>
 
-enum class StartFormation {
-    RANDOM,
-    MIDDLE,
-    CIRCLE
-};
-
 class ImageGPU
 {
 public:
@@ -32,7 +26,8 @@ public:
     void addConvKernel(unsigned int kernelId, std::vector<float> kernel);
     void convolution(unsigned int kernelSize, unsigned int kernelId, float convWeigth);
     void evaporate(float strength);
-    void configAgents(unsigned int num, StartFormation startFormation);
+    void setAgentStart(unsigned int num, StartFormation startFormation);
+    void updatePopulationSize(unsigned int num);
     
     void configAgentParameters(AgentConfig ac) { 
         this->configAgentSpeed(ac.speed); 
@@ -46,7 +41,7 @@ public:
     void configAgentSensorAngleSpacing(float sensorAngleSpacing) { agentConfig_.sensorAngleSpacing = sensorAngleSpacing * (M_PI / 180.0); }
     void configAgentSensorOffsetDst(float sensorOffsetDst) { agentConfig_.sensorOffsetDst = sensorOffsetDst; }
     void configAgentSensorSize(float sensorSize) { agentConfig_.sensorSize = sensorSize; }
-    
+
     void updateAgents();
 private:
     void loadTexture();
@@ -83,5 +78,6 @@ private:
     };
     curandState* agentRandomState_ = nullptr;
     unsigned int nAgents_ = 0;
+    unsigned int nAgentsGpuSize_ = 0;
     float agentSpeed_ = 1.0;
 };

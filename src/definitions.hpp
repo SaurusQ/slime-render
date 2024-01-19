@@ -38,10 +38,19 @@ struct AgentConfig
 
 typedef AgentConfig AgentConfig_I;
 
+enum class StartFormation {
+    CONFIGURED,
+    RANDOM,
+    MIDDLE,
+    CIRCLE
+};
+
 struct ImgConfig
 {
     AgentConfig ac;
+    int numAgents;
     float evaporate;
     float diffuse;
     bool updateAgents;
+    StartFormation startFormation;
 };
