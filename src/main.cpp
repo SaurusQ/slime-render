@@ -29,9 +29,11 @@ ImgConfig imgConfig
         9.0,
         0
     },
+    10000,
     0.007,
     1.0,
-    false
+    false,
+    StartFormation::MIDDLE
 };
 
 bool showUI = false;
@@ -231,7 +233,6 @@ int main()
         0.2  / 9.0, 0.2  / 9.0, 0.2  / 9.0
     });
 
-    imgGPU.configAgents(1000000, StartFormation::MIDDLE);
     imgGPU.configAgentParameters(imgConfig.ac);
 
     unsigned int IMG_W = img.getWidth();
@@ -248,6 +249,13 @@ int main()
         fpsHandler(currentTime, window);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        if (imgConfig.startFormation != StartFormation::CONFIGURED)
+        {
+            imgGPU.setAgentStart(imgConfig.numAgents, imgConfig.startFormation);
+            imgConfig.startFormation = StartFormation::CONFIGURED;
+        }
+        imgGPU.updatePopulationSize(imgConfig.numAgents);
 
         if (imgConfig.updateAgents)
         {
