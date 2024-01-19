@@ -231,7 +231,7 @@ int main()
         0.2  / 9.0, 0.2  / 9.0, 0.2  / 9.0
     });
 
-    imgGPU.configAgents(1000000);
+    imgGPU.configAgents(1000000, StartFormation::MIDDLE);
     imgGPU.configAgentParameters(imgConfig.ac);
 
     unsigned int IMG_W = img.getWidth();
