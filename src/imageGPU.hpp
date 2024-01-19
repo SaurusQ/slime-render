@@ -11,6 +11,12 @@
 #include <unordered_map>
 #include <cmath>
 
+enum class StartFormation {
+    RANDOM,
+    MIDDLE,
+    CIRCLE
+};
+
 class ImageGPU
 {
 public:
@@ -26,7 +32,7 @@ public:
     void addConvKernel(unsigned int kernelId, std::vector<float> kernel);
     void convolution(unsigned int kernelSize, unsigned int kernelId, float convWeigth);
     void evaporate(float strength);
-    void configAgents(unsigned int num);
+    void configAgents(unsigned int num, StartFormation startFormation);
     
     void configAgentParameters(AgentConfig ac) { 
         this->configAgentSpeed(ac.speed); 

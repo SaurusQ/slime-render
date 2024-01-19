@@ -21,3 +21,10 @@ To complile this program you need to:
 	- On Ubuntu install libglfw3 and libglfw3-dev
 - Install glm
 	- On Ubuntu install libglm-dev
+¨
+## Compile with configuration UI
+
+- Install imgui
+	- Clone imgui to lib/
+	- git clone https://github.com/ocornut/imgui.git
+- make gui

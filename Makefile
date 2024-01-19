@@ -27,7 +27,7 @@ all: $(BUILD_DIR) $(BUILD_DIR)/$(TARGET)
 gui: test $(BUILD_DIR_IMGUI) all
 
 test:
-	echo $(OBJS)
+	echo $(MAKECMDGOALS)
 
 run: all
 	./build/slime.exe
@@ -49,8 +49,10 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.cu
 $(BUILD_DIR)/%.o: lib/glad/src/%.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+ifeq ($(filter gui,$(MAKECMDGOALS)),gui)
 $(BUILD_DIR)/%.o: $(SRC_DIR)/UI/%.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
+endif
 
 $(BUILD_DIR)/%.o : $(IMGUI_DIR)/%.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
@@ -62,11 +64,11 @@ $(BUILD_DIR)/$(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
 
 
-#$(BUILD_DIR_IMGUI)/%.o:$(IMGUI_DIR)/%.cpp
-#	$(CXX) $(CFLAGS) -c -o $@ $<
+$(BUILD_DIR_IMGUI)/%.o:$(IMGUI_DIR)/%.cpp
+	$(CXX) $(CFLAGS) -c -o $@ $<
 
-#(BUILD_DIR_IMGUI)/%.o:$(IMGUI_DIR)/backends/%.cpp
-#	$(CXX) $(CFLAGS) $(IFLAGS) -c -o $@ $<
+$(BUILD_DIR_IMGUI)/%.o:$(IMGUI_DIR)/backends/%.cpp
+	$(CXX) $(CFLAGS) $(IFLAGS) -c -o $@ $<
 
 clean:
 	rm -rf $(BUILD_DIR)/*

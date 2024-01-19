@@ -241,7 +241,7 @@ void ImageGPU::evaporate(float strength)
     kl_evaporate(grid, block, imgCudaArray_, strength, width_);
 }
 
-void ImageGPU::configAgents(unsigned int num)
+void ImageGPU::configAgents(unsigned int num, StartFormation startFormation)
 {
     nAgents_ = num;
     if (agents_ != nullptr) cudaFree(agents_);
@@ -260,17 +260,25 @@ void ImageGPU::configAgents(unsigned int num)
     for (int i = 0; i < nAgents_; i++)
     {
         Agent a;
-        #if 1
-        a.pos = float2{width_ / 2.0f, height_ / 2.0f};
-        a.angle = dist(rng);
-        #else
-        float r = std::sqrt(randn(rng)) * 1000; // Radius
-        float x = randn(rng) * 2 * M_PI;
-        a.pos = float2{width_ / 2.0 + static_cast<float>(r * std::cos(x)), height_ / 2.0 + static_cast<float>(r * std::sin(x))};
-        a.angle = dist(rng);
-        #endif
+        switch (startFormation)
+        {
+            case StartFormation::CIRCLE:
+            {
+                float r = std::sqrt(randn(rng)) * 1000; // Radius
+                float x = randn(rng) * 2 * M_PI;
+                a.pos = float2{width_ / 2.0 + static_cast<float>(r * std::cos(x)), height_ / 2.0 + static_cast<float>(r * std::sin(x))};
+                a.angle = dist(rng);
+                break;
+            }
+            case StartFormation::MIDDLE:
+                a.pos = float2{width_ / 2.0f, height_ / 2.0f};
+                a.angle = dist(rng);
+                break;
+            case StartFormation::RANDOM:
+            default:
+                break;
+        }
         cpuAgents[i] = a;
-
     }
     
     this-checkCudaError(

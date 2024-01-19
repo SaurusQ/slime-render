@@ -33,7 +33,7 @@ void UI::update(GLFWwindow*wnd, ImgConfig& ic)
     int sensorSize = ic.ac.sensorSize;
 
     {
-        ImGui::Begin("Hello, world!");
+        ImGui::Begin("Configuration");
         
         if (ImGui::CollapsingHeader("Agent config", ImGuiTreeNodeFlags_DefaultOpen))
         {
