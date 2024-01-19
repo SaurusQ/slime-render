@@ -1,6 +1,6 @@
 
 CC := nvcc
-CFLAGS := -I src -I lib/glad/include
+CFLAGS := -I src -I lib/glad/include -allow-unsupported-compiler
 IFLAGS := -I lib/imgui -I lib/imgui/backends -DGUI -I src/UI -I lib
 LIBS := -lglfw -lGL
 SRC_DIR := src
@@ -9,7 +9,7 @@ BUILD_DIR_IMGUI := build/imgui
 TARGET := slime.exe
 IMGUI_DIR := lib/imgui
 
-SRCS := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*.cu) lib/glad/src/gl.c
+SRCS := $(wildcard $(SRC_DIR)/*.cpp) $(wildcard $(SRC_DIR)/*.cu) lib/glad/src/glad.c
 IMGUI_SRCS := $(IMGUI_DIR)/imgui.cpp $(IMGUI_DIR)/imgui_draw.cpp $(IMGUI_DIR)/imgui_tables.cpp $(IMGUI_DIR)/imgui_widgets.cpp $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
 
 ifeq ($(filter gui,$(MAKECMDGOALS)),gui)

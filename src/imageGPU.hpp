@@ -5,7 +5,7 @@
 
 #include <cuda_runtime.h>
 #include <curand_kernel.h>
-#include <glad/gl.h>
+#include <glad/glad.h>
 
 #include <vector>
 #include <unordered_map>

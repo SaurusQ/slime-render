@@ -3,7 +3,7 @@
 #include "shaderHandler.hpp"
 #include "definitions.hpp"
 
-#include <glad/gl.h>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -172,7 +172,7 @@ int main()
     glfwSetCursorPosCallback(window, cursor_callback);
 
     // glad: load all OpenGL function pointers
-    if (!gladLoadGL(glfwGetProcAddress))
+    if (!gladLoadGL())
     {
         std::cout << "Failed to initialize GLAD" << std::endl;
         return -1;
