@@ -155,7 +155,7 @@ void ImageGPU::loadTexture()
     
     this->checkCudaError(
         cudaGraphicsGLRegisterBuffer(&cudaPboResource_, pbo_, cudaGraphicsMapFlagsWriteDiscard),
-        "cudaGraphicsGLRegisterBUffer"
+        "cudaGraphicsGLRegisterBuffer"
     );
     cudaDeviceSynchronize();
 }
@@ -194,7 +194,7 @@ void ImageGPU::addConvKernel(unsigned int kernelId, std::vector<float> kernel)
     convKernelGPUptrs_[kernelId] = kernelGPUptr;
 }
 
-void ImageGPU::convolution(unsigned int kernelSize, unsigned int kernelId, float convWeight)
+void ImageGPU::convolution(unsigned int kernelSize, unsigned int kernelId, float convWeight, double deltaTime)
 {
     REQUIRE_CUDA
     unsigned int kernelValues = (kernelSize * 2 + 1) * (kernelSize * 2 + 1);
@@ -216,6 +216,7 @@ void ImageGPU::convolution(unsigned int kernelSize, unsigned int kernelId, float
         {
             for (int x = -k; x <= k; x++)
             {
+                std::cout << x << " | " << y << std::endl;
                 newRelIdx.push_back(x + y * static_cast<int>(padWidth_));
             }
         }
@@ -248,18 +249,18 @@ void ImageGPU::convolution(unsigned int kernelSize, unsigned int kernelId, float
 
     dim3 grid(width_ / 32, height_ / 32);
     dim3 block(32, 32);
-    kl_convolution(grid, block, (RGB*)imgCudaArray_, (RGB*)imgPadCudaArray_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, convWeight, width_, padWidth_, padding_, padOffset);
+    kl_convolution(grid, block, (RGB*)imgCudaArray_, (RGB*)imgPadCudaArray_, relativeIdxsGPUptr, kernelGPUptr, kernelValues, convWeight * deltaTime, width_, padWidth_, padding_, padOffset);
     this->checkCudaError(cudaGetLastError(), "kl_convolution");
 
     cudaDeviceSynchronize();
 }
 
-void ImageGPU::evaporate(float strength)
+void ImageGPU::evaporate(float strength, double deltaTime)
 {
     REQUIRE_CUDA
     dim3 grid(width_ / 32, height_ / 32);
     dim3 block(32, 32);
-    kl_evaporate(grid, block, imgCudaArray_, strength, width_);
+    kl_evaporate(grid, block, deltaTime, imgCudaArray_, strength, width_);
 }
 
 void ImageGPU::setAgentStart(unsigned int num, StartFormation startFormation)
@@ -374,12 +375,12 @@ void ImageGPU::updatePopulationSize(unsigned int num)
     std::cout << "Final count: " << nAgents_ << std::endl;
 }
 
-void ImageGPU::updateAgents()
+void ImageGPU::updateAgents(double deltaTime)
 {
     REQUIRE_CUDA
     dim3 grid(std::ceil(nAgents_ / 32.0), 1);
     dim3 block(32, 1);
-    kl_updateAgents(grid, block, agentRandomState_, imgCudaArray_, agents_, nAgents_,
+    kl_updateAgents(grid, block, deltaTime, agentRandomState_, imgCudaArray_, agents_, nAgents_,
         agentConfig_.speed,
         agentConfig_.turnSpeed,
         agentConfig_.sensorAngleSpacing,

@@ -24,8 +24,8 @@ public:
     GLuint getPbo() const { return pbo_; }
     // GPU mods
     void addConvKernel(unsigned int kernelId, std::vector<float> kernel);
-    void convolution(unsigned int kernelSize, unsigned int kernelId, float convWeigth);
-    void evaporate(float strength);
+    void convolution(unsigned int kernelSize, unsigned int kernelId, float convWeigth, double deltaTime);
+    void evaporate(float strength, double deltaTime);
     void setAgentStart(unsigned int num, StartFormation startFormation);
     void updatePopulationSize(unsigned int num);
     
@@ -42,7 +42,7 @@ public:
     void configAgentSensorOffsetDst(float sensorOffsetDst) { agentConfig_.sensorOffsetDst = sensorOffsetDst; }
     void configAgentSensorSize(float sensorSize) { agentConfig_.sensorSize = sensorSize; }
 
-    void updateAgents();
+    void updateAgents(double deltaTime);
 private:
     void loadTexture();
     bool checkCudaError(cudaError_t cs, std::string msg) const;

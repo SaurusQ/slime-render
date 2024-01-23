@@ -55,23 +55,24 @@ __global__ void k_convolution(
     imgPtr[idx].b = imgPadPtr[idxPad].b * (1 - convWeight) + valueB * (convWeight);
 }
 
-void kl_evaporate(dim3 grid, dim3 block, RGB* imgPtr, float strength, unsigned int width)
+void kl_evaporate(dim3 grid, dim3 block, double deltaTime, RGB* imgPtr, float strength, unsigned int width)
 {
-    k_evaporate<<<grid, block>>>(imgPtr, strength, width);
+    k_evaporate<<<grid, block>>>(deltaTime, imgPtr, strength, width);
 }
 
-__global__ void k_evaporate(RGB* imgPtr, float strength, unsigned int width)
+__global__ void k_evaporate(double deltaTime, RGB* imgPtr, float strength, unsigned int width)
 {
     int x = blockIdx.x * 32 + threadIdx.x;
     int y = blockIdx.y * 32 + threadIdx.y;
     int idx = x + y * width;
 
-    imgPtr[idx].r = max(0.0, imgPtr[idx].r - strength);
-    imgPtr[idx].g = max(0.0, imgPtr[idx].g - strength);
-    imgPtr[idx].b = max(0.0, imgPtr[idx].b - strength);
+    imgPtr[idx].r = max(0.0, imgPtr[idx].r - strength * deltaTime);
+    imgPtr[idx].g = max(0.0, imgPtr[idx].g - strength * deltaTime);
+    imgPtr[idx].b = max(0.0, imgPtr[idx].b - strength * deltaTime);
 }
 
 void kl_updateAgents(dim3 grid, dim3 block,
+    double deltaTime,
     curandState* randomState,
     RGB* imgPtr,
     Agent* agents,
@@ -85,10 +86,11 @@ void kl_updateAgents(dim3 grid, dim3 block,
     unsigned int heigth
 )
 {
-    k_updateAgents<<<grid, block>>>(randomState, imgPtr, agents, nAgents, speed, turnSpeed, sensorAngleSpacing, sensorOffsetDst, sensorSize, width, heigth);
+    k_updateAgents<<<grid, block>>>(deltaTime, randomState, imgPtr, agents, nAgents, speed, turnSpeed, sensorAngleSpacing, sensorOffsetDst, sensorSize, width, heigth);
 }
 
 __global__ void k_updateAgents(
+    double deltaTime,
     curandState* randomState,
     RGB* imgPtr,
     Agent* agents,
@@ -105,7 +107,7 @@ __global__ void k_updateAgents(
     int agentIdx = blockIdx.x * 32 + threadIdx.x;
     if (agentIdx >= nAgents) return;
     Agent a = agents[agentIdx];
-
+    /*
     // Sense and turn
     float wf = sense(a,                 0.0, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
     float wl = sense(a,  sensorAngleSpacing, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
@@ -127,11 +129,11 @@ __global__ void k_updateAgents(
     else if (wl > wr)
     {
         agents[agentIdx].angle += randomSteer * turnSpeed; // TODO * deltaTime
-    }
+    }*/
 
     // Update position
     float2 direction = make_float2(cosf(a.angle), sinf(a.angle));
-    float2 newPos = make_float2(speed * direction.x + a.pos.x, speed * direction.y + a.pos.y); // TODO * deltaTime
+    float2 newPos = make_float2(deltaTime * speed * direction.x + a.pos.x, deltaTime * speed * direction.y + a.pos.y); // TODO * deltaTime
 
     if (newPos.x < 0 || newPos.x >= width || newPos.y < 0 || newPos.y >= heigth)
     {
