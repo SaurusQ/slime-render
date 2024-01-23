@@ -23,9 +23,10 @@ public:
     GLuint getTexture() const { return texture_; }
     GLuint getPbo() const { return pbo_; }
     // GPU mods
-    void addConvKernel(unsigned int kernelId, std::vector<float> kernel);
-    void convolution(unsigned int kernelSize, unsigned int kernelId, float convWeigth, double deltaTime);
-    void evaporate(float strength, double deltaTime);
+    //void addConvKernel(unsigned int kernelId, std::vector<float> kernel);
+    //void convolution(unsigned int kernelSize, unsigned int kernelId, float convWeigth, double deltaTime);
+    //void evaporate(float strength, double deltaTime);
+    void updateTrailMap(double deltaTime, float diffuseWeight, float evaporateWeight);
     void setAgentStart(unsigned int num, StartFormation startFormation);
     void updatePopulationSize(unsigned int num);
     
@@ -64,8 +65,11 @@ private:
     unsigned int padWidth_;
 
     // Convolution
-    std::unordered_map<int, int*> convRelIdxsGPUptrs_;
-    std::unordered_map<int, float*> convKernelGPUptrs_;
+    //std::unordered_map<int, int*> convRelIdxsGPUptrs_;
+    //std::unordered_map<int, float*> convKernelGPUptrs_;
+
+    // Trail map
+    int* relativeIdxsGPUptr_ = nullptr;
 
     // Agent
     Agent* agents_ = nullptr;

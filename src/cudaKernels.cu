@@ -4,7 +4,7 @@
 
 #define PI 3.141592653589793f
 
-void kl_convolution(dim3 grid, dim3 block,
+/*void kl_convolution(dim3 grid, dim3 block,
     RGB* imgPtr,
     RGB* imgPadPtr,
     int* relativeIdxs,
@@ -69,6 +69,60 @@ __global__ void k_evaporate(double deltaTime, RGB* imgPtr, float strength, unsig
     imgPtr[idx].r = max(0.0, imgPtr[idx].r - strength * deltaTime);
     imgPtr[idx].g = max(0.0, imgPtr[idx].g - strength * deltaTime);
     imgPtr[idx].b = max(0.0, imgPtr[idx].b - strength * deltaTime);
+}*/
+
+void kl_updateTrailMap(dim3 grid, dim3 block,
+    double deltaTime,
+    RGB* imgPtr,
+    RGB* imgPadPtr,
+    int* relativeIdxs,
+    float diffuseDeltaW,
+    float evaporateDeltaW,
+    unsigned int width,
+    unsigned int padWidth,
+    unsigned int padding,
+    unsigned int padOffset
+)
+{
+    k_updateTrailMap<<<grid, block>>>(deltaTime, imgPtr, imgPadPtr, relativeIdxs, diffuseDeltaW, evaporateDeltaW, width, padWidth, padding, padOffset);
+}
+
+__global__ void k_updateTrailMap(
+    double deltaTime,
+    RGB* imgPtr,
+    RGB* imgPadPtr,
+    int* relativeIdxs,
+    float diffuseDeltaW,
+    float evaporateDeltaW,
+    unsigned int width,
+    unsigned int padWidth,
+    unsigned int padding,
+    unsigned int padOffset
+)
+{
+    int x = blockIdx.x * 32 + threadIdx.x;
+    int y = blockIdx.y * 32 + threadIdx.y;
+
+    int idxPad = padOffset + x + y * padWidth;
+    int idx = x + y * width;
+
+    // Diffuse
+    float valueR = 0;
+    float valueG = 0;
+    float valueB = 0;
+    for (int i = 0; i < 9; i++) // 3x3 grid
+    {
+        valueR += imgPadPtr[idxPad + relativeIdxs[i]].r;
+        valueG += imgPadPtr[idxPad + relativeIdxs[i]].g;
+        valueB += imgPadPtr[idxPad + relativeIdxs[i]].b;
+    }    
+    float diffusedR = imgPadPtr[idxPad].r * (1 - diffuseDeltaW) + (valueR / 9.0) * (diffuseDeltaW);
+    float diffusedG = imgPadPtr[idxPad].g * (1 - diffuseDeltaW) + (valueB / 9.0) * (diffuseDeltaW);
+    float diffusedB = imgPadPtr[idxPad].b * (1 - diffuseDeltaW) + (valueG / 9.0) * (diffuseDeltaW);
+    // Evaporate
+    imgPtr[idx].r = max(0.0, diffusedR - evaporateDeltaW);
+    imgPtr[idx].g = max(0.0, diffusedG - evaporateDeltaW);
+    imgPtr[idx].b = max(0.0, diffusedB - evaporateDeltaW);
 }
 
 void kl_updateAgents(dim3 grid, dim3 block,

@@ -44,8 +44,8 @@ void UI::update(GLFWwindow*wnd, ImgConfig& ic)
             ImGui::SliderInt("sensor size", &sensorSize, 0, 10.0);
 
         }
-        ImGui::SliderFloat("evaporate", &ic.evaporate, 0.01, 1);
-        ImGui::SliderFloat("diffuse", &ic.diffuse, 0.0, 10.0);
+        ImGui::SliderFloat("evaporate", &ic.evaporate, 0.001, 1);
+        ImGui::SliderFloat("diffuse", &ic.diffuse, 0.0, 50.0);
         ImGui::SliderInt("Particles", &ic.numAgents, 1, 100);
 
         if (ic.updateAgents)

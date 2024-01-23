@@ -29,9 +29,9 @@ ImgConfig imgConfig
         9.0,
         0
     },
-    10,             // num agents
-    0.2,            // evaporate
-    1.0,            // diffuse
+    100,            // num agents
+    0.2,            // evaporate        0.027
+    10.0,           // diffuse          50
     false,
     StartFormation::MIDDLE
 };
@@ -219,7 +219,7 @@ int main()
     imgGPU.update(img);
     imgGPU.deactivateCuda();
     
-    std::vector<float> kernelData = {
+    /*std::vector<float> kernelData = {
         1.0 / 256,  4.0 / 256,  6.0 / 256,  4.0 / 256,  1.0 / 256,
         4.0 / 256, 16.0 / 256, 24.0 / 256, 16.0 / 256,  4.0 / 256,
         6.0 / 256, 24.0 / 256, 36.0 / 256, 24.0 / 256,  6.0 / 256,
@@ -232,7 +232,7 @@ int main()
         0.2  / 9.0, 0.2  / 9.0, 0.2  / 9.0,
         0.2  / 9.0, 7.4  / 9.0, 0.2  / 9.0,
         0.2  / 9.0, 0.2  / 9.0, 0.2  / 9.0
-    });
+    });*/
 
     imgGPU.configAgentParameters(imgConfig.ac);
 
@@ -264,9 +264,10 @@ int main()
         if (imgConfig.updateAgents)
         {
             imgGPU.activateCuda();
+            imgGPU.updateTrailMap(deltaTime, imgConfig.diffuse, imgConfig.evaporate);
             imgGPU.updateAgents(deltaTime);
-            imgGPU.convolution(1, 1, imgConfig.diffuse, deltaTime);
-            imgGPU.evaporate(imgConfig.evaporate, deltaTime);
+            //imgGPU.convolution(1, 1, imgConfig.diffuse, deltaTime);
+            //imgGPU.evaporate(imgConfig.evaporate, deltaTime);
             imgGPU.deactivateCuda();
         }
 
