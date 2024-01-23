@@ -60,13 +60,17 @@ ImageGPU::~ImageGPU()
     cudaGraphicsUnregisterResource(cudaPboResource_);
     glDeleteTextures(1, &texture_);
 
-    for (const auto& pair : convRelIdxsGPUptrs_)
+    /*for (const auto& pair : convRelIdxsGPUptrs_)
     {
         cudaFree(pair.second);
     }
     for (const auto& pair : convKernelGPUptrs_)
     {
         cudaFree(pair.second);
+    }*/
+    if (relativeIdxsGPUptr_ != nullptr)
+    {
+        cudaFree(relativeIdxsGPUptr_);
     }
     if (agents_ != nullptr) cudaFree(agents_);
 }
@@ -180,7 +184,7 @@ void ImageGPU::imgToPadded()
     );
 }
 
-void ImageGPU::addConvKernel(unsigned int kernelId, std::vector<float> kernel)
+/*void ImageGPU::addConvKernel(unsigned int kernelId, std::vector<float> kernel)
 {
     float* kernelGPUptr;
     this->checkCudaError(
@@ -261,6 +265,52 @@ void ImageGPU::evaporate(float strength, double deltaTime)
     dim3 grid(width_ / 32, height_ / 32);
     dim3 block(32, 32);
     kl_evaporate(grid, block, deltaTime, imgCudaArray_, strength, width_);
+}*/
+
+void ImageGPU::updateTrailMap(double deltaTime, float diffuseWeight, float evaporateWeight)
+{
+    REQUIRE_CUDA
+    //unsigned int kernelValues = (kernelSize * 2 + 1) * (kernelSize * 2 + 1);
+    //
+    this->imgToPadded();
+
+    if (relativeIdxsGPUptr_ == nullptr)
+    {
+        if(padding_ < 1) 
+        {
+            std::cerr << "Insuffisient padding size Padding: " << padding_ << std::endl;
+            return; 
+        }
+        // Generate new relative idxs
+        std::vector<int> newRelIdx;
+        unsigned int kernelValues = 9; // 3x3 diffuse
+        for (int y = -1; y <= 1; y++)
+        {
+            for (int x = -1; x <= 1; x++)
+            {
+                std::cout << x << " | " << y << std::endl;
+                newRelIdx.push_back(x + y * static_cast<int>(padWidth_));
+            }
+        }
+
+        this->checkCudaError(
+            cudaMalloc((void**)&relativeIdxsGPUptr_, kernelValues * sizeof(int)),
+            "cudaMalloc relativeIdxsGPUptr"
+        );
+        this->checkCudaError(
+            cudaMemcpy((void*)relativeIdxsGPUptr_, newRelIdx.data(), kernelValues * sizeof(int), cudaMemcpyHostToDevice),
+            "cudaMemcpy relativeIdxs" 
+        );
+    }
+
+    unsigned int padOffset = padding_ * padWidth_ + padding_;
+
+    dim3 grid(width_ / 32, height_ / 32);
+    dim3 block(32, 32);
+    kl_updateTrailMap(grid, block, deltaTime, (RGB*)imgCudaArray_, (RGB*)imgPadCudaArray_, relativeIdxsGPUptr_, diffuseWeight * deltaTime, evaporateWeight * deltaTime, width_, padWidth_, padding_, padOffset);
+    this->checkCudaError(cudaGetLastError(), "kl_convolution");
+
+    cudaDeviceSynchronize();
 }
 
 void ImageGPU::setAgentStart(unsigned int num, StartFormation startFormation)
