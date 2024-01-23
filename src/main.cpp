@@ -23,15 +23,15 @@ ImgConfig imgConfig
 {
     AgentConfig
     {
-        1.0,
-        90.0,
+        60.0,       // speed
+        90.0,       // turnspeed
         30.0,
         9.0,
         0
     },
-    10000,
-    0.007,
-    1.0,
+    10,             // num agents
+    0.2,            // evaporate
+    1.0,            // diffuse
     false,
     StartFormation::MIDDLE
 };
@@ -208,7 +208,8 @@ int main()
     UI configUI(window);
 #endif
 
-    Image img{W_4K, H_4K};
+    //Image img{W_4K, H_4K};
+    Image img{320, 180};
     ImageGPU imgGPU{img, 100};
     GLuint texture = imgGPU.getTexture();
     imgGPU.activateCuda();
@@ -239,13 +240,16 @@ int main()
     unsigned int IMG_H = img.getHeigth();
 
     double currentTime = glfwGetTime();
+    double lastTime = currentTime;
+    double deltaTime;
 
     while (!glfwWindowShouldClose(window))
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
+        lastTime = currentTime;
         currentTime = glfwGetTime();
-
+        deltaTime = currentTime - lastTime;
         fpsHandler(currentTime, window);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -260,9 +264,9 @@ int main()
         if (imgConfig.updateAgents)
         {
             imgGPU.activateCuda();
-            imgGPU.convolution(1, 1, imgConfig.diffuse);
-            imgGPU.evaporate(imgConfig.evaporate);
-            imgGPU.updateAgents();
+            imgGPU.updateAgents(deltaTime);
+            imgGPU.convolution(1, 1, imgConfig.diffuse, deltaTime);
+            imgGPU.evaporate(imgConfig.evaporate, deltaTime);
             imgGPU.deactivateCuda();
         }
 
