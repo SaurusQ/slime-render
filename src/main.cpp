@@ -32,7 +32,8 @@ ImgConfig imgConfig
     1000,            // num agents
     0.2,            // evaporate        0.027
     10.0,           // diffuse          50
-    false,
+    false, // update agents
+    false, // clear img
     StartFormation::MIDDLE
 };
 
@@ -260,6 +261,11 @@ int main()
             imgConfig.startFormation = StartFormation::CONFIGURED;
         }
         imgGPU.updatePopulationSize(imgConfig.numAgents);
+        if (imgConfig.clearImg)
+        {
+            imgGPU.clearImage();
+            imgConfig.clearImg = false;
+        }
 
         if (imgConfig.updateAgents)
         {

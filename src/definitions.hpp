@@ -52,5 +52,6 @@ struct ImgConfig
     float evaporate;
     float diffuse;
     bool updateAgents;
+    bool clearImg;
     StartFormation startFormation;
 };
