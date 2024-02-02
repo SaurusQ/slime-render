@@ -46,7 +46,7 @@ void UI::update(GLFWwindow*wnd, ImgConfig& ic)
         }
         ImGui::SliderFloat("evaporate", &ic.evaporate, 0.001, 1);
         ImGui::SliderFloat("diffuse", &ic.diffuse, 0.0, 50.0);
-        ImGui::SliderInt("Particles", &ic.numAgents, 1, 100);
+        ImGui::SliderInt("Particles", &ic.numAgents, 1, 1000000);
 
         if (ic.updateAgents)
         {
