@@ -72,6 +72,14 @@ ImageGPU::~ImageGPU()
     {
         cudaFree(relativeIdxsGPUptr_);
     }
+    if (imgCudaArray_)
+    {
+        cudaFree(imgCudaArray_);
+    }
+    if (imgPadCudaArray_)
+    {
+        cudaFree(imgPadCudaArray_);
+    }
     if (agents_ != nullptr) cudaFree(agents_);
 }
 
@@ -129,6 +137,18 @@ void ImageGPU::readBack(const Image& img) const
         cudaMemcpy((void*)img.getPtr(), (void*)imageGPUptr_, bufferSize_, cudaMemcpyDeviceToHost),
         "cudaMemcpy readback()"
     );*/
+}
+
+void ImageGPU::clearImage()
+{
+    if (imgCudaArray_)
+    {
+        cudaMemset(imgCudaArray_, 0, bufferSize_);
+    }
+    if (imgPadCudaArray_)
+    {
+        cudaMemset(imgPadCudaArray_, 0, bufferSizePadded_);
+    }
 }
 
 void ImageGPU::loadTexture()
@@ -288,7 +308,6 @@ void ImageGPU::updateTrailMap(double deltaTime, float diffuseWeight, float evapo
         {
             for (int x = -1; x <= 1; x++)
             {
-                std::cout << x << " | " << y << std::endl;
                 newRelIdx.push_back(x + y * static_cast<int>(padWidth_));
             }
         }

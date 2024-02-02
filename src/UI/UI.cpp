@@ -56,6 +56,8 @@ void UI::update(GLFWwindow*wnd, ImgConfig& ic)
         {
             if (ImGui::Button("Run")) ic.updateAgents = true;
         }
+        ImGui::SameLine();
+        if(ImGui::Button("Clear")) ic.clearImg = true;
         
         ImGui::Text("Reset Spawn");
         if(ImGui::Button("Random")) ic.startFormation = StartFormation::RANDOM; 

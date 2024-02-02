@@ -20,6 +20,7 @@ public:
     void deactivateCuda();
     void update(const Image& img);
     void readBack(const Image& img) const;
+    void clearImage();
     GLuint getTexture() const { return texture_; }
     GLuint getPbo() const { return pbo_; }
     // GPU mods
