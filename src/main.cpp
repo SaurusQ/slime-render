@@ -29,7 +29,7 @@ ImgConfig imgConfig
         9.0,
         0
     },
-    100,            // num agents
+    1000,            // num agents
     0.2,            // evaporate        0.027
     10.0,           // diffuse          50
     false,
@@ -208,8 +208,8 @@ int main()
     UI configUI(window);
 #endif
 
-    //Image img{W_4K, H_4K};
-    Image img{320, 180};
+    Image img{W_4K, H_4K};
+    //Image img{320, 180};
     ImageGPU imgGPU{img, 100};
     GLuint texture = imgGPU.getTexture();
     imgGPU.activateCuda();

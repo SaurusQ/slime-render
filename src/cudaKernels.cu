@@ -161,7 +161,7 @@ __global__ void k_updateAgents(
     int agentIdx = blockIdx.x * 32 + threadIdx.x;
     if (agentIdx >= nAgents) return;
     Agent a = agents[agentIdx];
-    /*
+    
     // Sense and turn
     float wf = sense(a,                 0.0, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
     float wl = sense(a,  sensorAngleSpacing, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
@@ -183,7 +183,7 @@ __global__ void k_updateAgents(
     else if (wl > wr)
     {
         agents[agentIdx].angle += randomSteer * turnSpeed; // TODO * deltaTime
-    }*/
+    }
 
     // Update position
     float2 direction = make_float2(cosf(a.angle), sinf(a.angle));

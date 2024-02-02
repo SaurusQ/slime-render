@@ -325,33 +325,36 @@ void ImageGPU::setAgentStart(unsigned int num, StartFormation startFormation)
     
     std::random_device rd;
     std::mt19937 rng(rd());
-    std::uniform_real_distribution<float> dist(0.0, 2 * M_PI);
+    std::uniform_real_distribution<float> dist2pi(0.0, 2 * M_PI);
     std::uniform_real_distribution<float> randn(0.0, 1.0);
 
     std::unique_ptr<Agent[]> cpuAgents = std::make_unique<Agent[]>(nAgents_);
     
     for (int i = 0; i < nAgents_; i++)
     {
-        Agent a;
+        Agent ag;
         switch (startFormation)
         {
             case StartFormation::CIRCLE:
             {
-                float r = std::sqrt(randn(rng)) * 1000; // Radius
-                float x = randn(rng) * 2 * M_PI;
-                a.pos = float2{width_ / 2.0 + static_cast<float>(r * std::cos(x)), height_ / 2.0 + static_cast<float>(r * std::sin(x))};
-                a.angle = dist(rng);
+                // Polar coordinates
+                float r = (std::min(width_, height_) / 2.0f) * 0.9f * randn(rng);
+                float a = dist2pi(rng);
+                ag.pos = float2{width_ / 2.0f + static_cast<float>(r * std::cos(a)), height_ / 2.0f + static_cast<float>(r * std::sin(a))};
+                ag.angle = std::atan2((height_ / 2.0f) - ag.pos.y, (width_ / 2.0f) - ag.pos.x);
                 break;
             }
             case StartFormation::MIDDLE:
-                a.pos = float2{width_ / 2.0f, height_ / 2.0f};
-                a.angle = dist(rng);
+            {
+                ag.pos = float2{width_ / 2.0f, height_ / 2.0f};
+                ag.angle = dist2pi(rng);
                 break;
+            }
             case StartFormation::RANDOM:
             default:
                 break;
         }
-        cpuAgents[i] = a;
+        cpuAgents[i] = ag;
     }
     
     this-checkCudaError(
