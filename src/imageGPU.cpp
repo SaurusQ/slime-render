@@ -60,14 +60,6 @@ ImageGPU::~ImageGPU()
     cudaGraphicsUnregisterResource(cudaPboResource_);
     glDeleteTextures(1, &texture_);
 
-    /*for (const auto& pair : convRelIdxsGPUptrs_)
-    {
-        cudaFree(pair.second);
-    }
-    for (const auto& pair : convKernelGPUptrs_)
-    {
-        cudaFree(pair.second);
-    }*/
     if (relativeIdxsGPUptr_ != nullptr)
     {
         cudaFree(relativeIdxsGPUptr_);
@@ -288,7 +280,11 @@ void ImageGPU::setAgentStart(unsigned int num, StartFormation startFormation)
             }
             case StartFormation::RANDOM:
             default:
+            {
+                ag.pos = float2{randn(rng) * width_, randn(rng) * height_};
+                ag.angle = dist2pi(rng);
                 break;
+            }
         }
         cpuAgents[i] = ag;
     }
