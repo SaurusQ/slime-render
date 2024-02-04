@@ -3,46 +3,6 @@
 #include "definitions.hpp"
 #include <curand_kernel.h>
 
-/*void kl_convolution(dim3 grid, dim3 block,
-    RGB* imgPtr,
-    RGB* imgPadPtr,
-    int* relativeIdxs,
-    float* kernel,
-    unsigned int kernelValues,
-    float convWeight,
-    unsigned int width,
-    unsigned int padWidth,
-    unsigned int padding,
-    unsigned int padOffset
-);
-
-__global__ void k_convolution(
-    RGB* imgPtr,
-    RGB* imgPadPtr,
-    int* relativeIdxs,
-    float* kernel,
-    unsigned int kernelValues,
-    float convWeight,
-    unsigned int width,
-    unsigned int padWidth,
-    unsigned int padding,
-    unsigned int padOffset
-);
-
-void kl_evaporate(dim3 grid, dim3 block,
-    double deltaTime,
-    RGB* imgPtr,
-    float strength,
-    unsigned int width
-);
-
-__global__ void k_evaporate(
-    double deltaTime,
-    RGB* imgPtr,
-    float strength,
-    unsigned int width
-);*/
-
 void kl_updateTrailMap(dim3 grid, dim3 block,
     double deltaTime,
     RGB* imgPtr,
