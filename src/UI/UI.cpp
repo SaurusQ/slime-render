@@ -66,6 +66,8 @@ void UI::update(GLFWwindow*wnd, ImgConfig& ic)
         ImGui::SameLine();
         if(ImGui::Button("Circle")) ic.startFormation = StartFormation::CIRCLE;
 
+        ImGui::Checkbox("Clear on spawn", &ic.clearOnSpawn);
+
         ImGui::End();
     }
 

@@ -53,5 +53,6 @@ struct ImgConfig
     float diffuse;
     bool updateAgents;
     bool clearImg;
+    bool clearOnSpawn;
     StartFormation startFormation;
 };

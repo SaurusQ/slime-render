@@ -34,6 +34,7 @@ ImgConfig imgConfig
     10.0,           // diffuse          50
     false, // update agents
     false, // clear img
+    true,  // clear on spawn
     StartFormation::MIDDLE
 };
 
@@ -240,7 +241,7 @@ int main()
 
         if (imgConfig.startFormation != StartFormation::CONFIGURED)
         {
-            imgGPU.setAgentStart(imgConfig.numAgents, imgConfig.startFormation);
+            imgGPU.spawnAgents(imgConfig.numAgents, imgConfig.startFormation, imgConfig.clearOnSpawn);
             imgConfig.startFormation = StartFormation::CONFIGURED;
         }
         imgGPU.updatePopulationSize(imgConfig.numAgents);
