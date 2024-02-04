@@ -219,21 +219,6 @@ int main()
     //img.randomize();
     imgGPU.update(img);
     imgGPU.deactivateCuda();
-    
-    /*std::vector<float> kernelData = {
-        1.0 / 256,  4.0 / 256,  6.0 / 256,  4.0 / 256,  1.0 / 256,
-        4.0 / 256, 16.0 / 256, 24.0 / 256, 16.0 / 256,  4.0 / 256,
-        6.0 / 256, 24.0 / 256, 36.0 / 256, 24.0 / 256,  6.0 / 256,
-        4.0 / 256, 16.0 / 256, 24.0 / 256, 16.0 / 256,  4.0 / 256,
-        1.0 / 256,  4.0 / 256,  6.0 / 256,  4.0 / 256,  1.0 / 256
-    };
-    imgGPU.addConvKernel(2, kernelData);
-    imgGPU.addConvKernel(1, std::vector<float>(9, 1.0 / 9.0));
-    imgGPU.addConvKernel(3, std::vector<float>{
-        0.2  / 9.0, 0.2  / 9.0, 0.2  / 9.0,
-        0.2  / 9.0, 7.4  / 9.0, 0.2  / 9.0,
-        0.2  / 9.0, 0.2  / 9.0, 0.2  / 9.0
-    });*/
 
     imgGPU.configAgentParameters(imgConfig.ac);
 
@@ -246,8 +231,6 @@ int main()
 
     while (!glfwWindowShouldClose(window))
     {
-        //std::this_thread::sleep_for(std::chrono::milliseconds(10));
-
         lastTime = currentTime;
         currentTime = glfwGetTime();
         deltaTime = currentTime - lastTime;
@@ -272,8 +255,6 @@ int main()
             imgGPU.activateCuda();
             imgGPU.updateTrailMap(deltaTime, imgConfig.diffuse, imgConfig.evaporate);
             imgGPU.updateAgents(deltaTime);
-            //imgGPU.convolution(1, 1, imgConfig.diffuse, deltaTime);
-            //imgGPU.evaporate(imgConfig.evaporate, deltaTime);
             imgGPU.deactivateCuda();
         }
 
@@ -286,7 +267,7 @@ int main()
         //glBindTexture(GL_TEXTURE_2D, texture);
         glActiveTexture(GL_TEXTURE0);
 
-        // Render a VAO that cover the screen
+        // Render a VAO that covers the screen
         shaderHandler.use();
         updateViewMatrix();
         glBindVertexArray(VAO);

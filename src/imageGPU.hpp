@@ -16,17 +16,18 @@ class ImageGPU
 public:
     ImageGPU(const Image& img, unsigned int padding);
     ~ImageGPU();
+
     void activateCuda();
     void deactivateCuda();
+
     void update(const Image& img);
     void readBack(const Image& img) const;
     void clearImage();
+
     GLuint getTexture() const { return texture_; }
     GLuint getPbo() const { return pbo_; }
+    
     // GPU mods
-    //void addConvKernel(unsigned int kernelId, std::vector<float> kernel);
-    //void convolution(unsigned int kernelSize, unsigned int kernelId, float convWeigth, double deltaTime);
-    //void evaporate(float strength, double deltaTime);
     void updateTrailMap(double deltaTime, float diffuseWeight, float evaporateWeight);
     void setAgentStart(unsigned int num, StartFormation startFormation);
     void updatePopulationSize(unsigned int num);
@@ -65,10 +66,6 @@ private:
     unsigned int padding_;
     unsigned int padWidth_;
 
-    // Convolution
-    //std::unordered_map<int, int*> convRelIdxsGPUptrs_;
-    //std::unordered_map<int, float*> convKernelGPUptrs_;
-
     // Trail map
     int* relativeIdxsGPUptr_ = nullptr;
 
@@ -84,5 +81,4 @@ private:
     curandState* agentRandomState_ = nullptr;
     unsigned int nAgents_ = 0;
     unsigned int nAgentsGpuSize_ = 0;
-    float agentSpeed_ = 1.0;
 };
