@@ -241,7 +241,7 @@ void ImageGPU::updateTrailMap(double deltaTime, float diffuseWeight, float evapo
     cudaDeviceSynchronize();
 }
 
-void ImageGPU::setAgentStart(unsigned int num, StartFormation startFormation)
+void ImageGPU::spawnAgents(unsigned int num, StartFormation startFormation, bool clear)
 {
     nAgents_ = num;
     if (agents_ != nullptr) cudaFree(agents_);
@@ -251,6 +251,8 @@ void ImageGPU::setAgentStart(unsigned int num, StartFormation startFormation)
         "cudaMalloc agents"
     );
     
+    if (clear) this->clearImage();
+
     std::random_device rd;
     std::mt19937 rng(rd());
     std::uniform_real_distribution<float> dist2pi(0.0, 2 * M_PI);

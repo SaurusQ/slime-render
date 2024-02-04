@@ -26,10 +26,10 @@ public:
 
     GLuint getTexture() const { return texture_; }
     GLuint getPbo() const { return pbo_; }
-    
+
     // GPU mods
     void updateTrailMap(double deltaTime, float diffuseWeight, float evaporateWeight);
-    void setAgentStart(unsigned int num, StartFormation startFormation);
+    void spawnAgents(unsigned int num, StartFormation startFormation, bool clear);
     void updatePopulationSize(unsigned int num);
     
     void configAgentParameters(AgentConfig ac) { 
