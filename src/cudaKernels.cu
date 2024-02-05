@@ -69,11 +69,12 @@ void kl_updateAgents(dim3 grid, dim3 block,
     float sensorAngleSpacing,
     float sensorOffsetDst,
     unsigned int sensorSize,
+    float trailDeltaW,
     unsigned int width,
     unsigned int heigth
 )
 {
-    k_updateAgents<<<grid, block>>>(deltaTime, randomState, imgPtr, agents, nAgents, speed, turnSpeed, sensorAngleSpacing, sensorOffsetDst, sensorSize, width, heigth);
+    k_updateAgents<<<grid, block>>>(deltaTime, randomState, imgPtr, agents, nAgents, speed, turnSpeed, sensorAngleSpacing, sensorOffsetDst, sensorSize, trailDeltaW, width, heigth);
 }
 
 __global__ void k_updateAgents(
@@ -87,6 +88,7 @@ __global__ void k_updateAgents(
     float sensorAngleSpacing,
     float sensorOffsetDst,
     unsigned int sensorSize,
+    float trailDeltaW,
     unsigned int width,
     unsigned int heigth
 )
@@ -128,10 +130,14 @@ __global__ void k_updateAgents(
         newPos.y = min(heigth - 0.01, max(0.0, newPos.y));
         agents[agentIdx].angle = curand_uniform(randomState + threadIdx.x) * 2 * PI;
     }
-    // TODO trailweight
+    else
+    {
+        int idx = __float2uint_rd(newPos.x) + __float2uint_rd(newPos.y) * width;
+        float value =  min(1.0f, imgPtr[idx].r + trailDeltaW);
+        imgPtr[idx] = RGB{value, value, value};
+    }
+    
     agents[agentIdx].pos = newPos;
-
-    imgPtr[__float2uint_rd(newPos.x) + __float2uint_rd(newPos.y) * width] = RGB{1.0, 1.0, 1.0};
 }
 
 __device__ float sense(Agent a, float sensorAngleOffset, RGB* imgPtr, float sensorOffsetDst, int sensorSize, unsigned int width, unsigned int heigth)

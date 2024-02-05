@@ -51,6 +51,7 @@ struct ImgConfig
     int numAgents;
     float evaporate;
     float diffuse;
+    float trailWeight;
     bool updateAgents;
     bool clearImg;
     bool clearOnSpawn;

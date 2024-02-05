@@ -45,7 +45,7 @@ public:
     void configAgentSensorOffsetDst(float sensorOffsetDst) { agentConfig_.sensorOffsetDst = sensorOffsetDst; }
     void configAgentSensorSize(float sensorSize) { agentConfig_.sensorSize = sensorSize; }
 
-    void updateAgents(double deltaTime);
+    void updateAgents(double deltaTime, float trailWeight);
 private:
     void loadTexture();
     bool checkCudaError(cudaError_t cs, std::string msg) const;

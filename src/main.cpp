@@ -29,9 +29,10 @@ ImgConfig imgConfig
         9.0,
         0
     },
-    1000,            // num agents
+    1000,           // num agents
     0.2,            // evaporate        0.027
     10.0,           // diffuse          50
+    20.0f,          // trail weight 
     false, // update agents
     false, // clear img
     true,  // clear on spawn
@@ -255,7 +256,7 @@ int main()
         {
             imgGPU.activateCuda();
             imgGPU.updateTrailMap(deltaTime, imgConfig.diffuse, imgConfig.evaporate);
-            imgGPU.updateAgents(deltaTime);
+            imgGPU.updateAgents(deltaTime, imgConfig.trailWeight);
             imgGPU.deactivateCuda();
         }
 

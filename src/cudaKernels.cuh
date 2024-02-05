@@ -40,6 +40,7 @@ void kl_updateAgents(dim3 grid, dim3 block,
     float sensorAngleSpacing,
     float sensorOffsetDst,
     unsigned int sensorSize,
+    float trailDeltaW,
     unsigned int width,
     unsigned int heigth
 );
@@ -55,6 +56,7 @@ __global__ void k_updateAgents(
     float sensorAngleSpacing,
     float sensorOffsetDst,
     unsigned int sensorSize,
+    float trailDeltaW,
     unsigned int width,
     unsigned int heigth
 );
