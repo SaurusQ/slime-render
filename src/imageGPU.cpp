@@ -362,7 +362,7 @@ void ImageGPU::updatePopulationSize(unsigned int num)
     std::cout << "Final count: " << nAgents_ << std::endl;
 }
 
-void ImageGPU::updateAgents(double deltaTime)
+void ImageGPU::updateAgents(double deltaTime, float trailWeight)
 {
     REQUIRE_CUDA
     dim3 grid(std::ceil(nAgents_ / 32.0), 1);
@@ -373,5 +373,6 @@ void ImageGPU::updateAgents(double deltaTime)
         agentConfig_.sensorAngleSpacing,
         agentConfig_.sensorOffsetDst,
         agentConfig_.sensorSize,
+        static_cast<float>(trailWeight * deltaTime),
         width_, height_);
 }
