@@ -25,6 +25,8 @@ struct Agent
 {
     float2 pos;
     float angle;
+    int3 speciesMask;
+    int speciesIdx;
 };
 
 struct AgentConfig
