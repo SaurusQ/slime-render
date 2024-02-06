@@ -288,6 +288,8 @@ void ImageGPU::spawnAgents(unsigned int num, StartFormation startFormation, bool
                 break;
             }
         }
+        ag.speciesMask = {1, 0, 0};
+        ag.speciesIdx = 0;
         cpuAgents[i] = ag;
     }
     

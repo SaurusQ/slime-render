@@ -95,49 +95,53 @@ __global__ void k_updateAgents(
 {
     int agentIdx = blockIdx.x * 32 + threadIdx.x;
     if (agentIdx >= nAgents) return;
-    Agent a = agents[agentIdx];
+    Agent* agent = agents + agentIdx;
     
     // Sense and turn
-    float wf = sense(a,                 0.0, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
-    float wl = sense(a,  sensorAngleSpacing, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
-    float wr = sense(a, -sensorAngleSpacing, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
+    float wf = sense(*agent,                 0.0, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
+    float wl = sense(*agent,  sensorAngleSpacing, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
+    float wr = sense(*agent, -sensorAngleSpacing, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
     
     float randomSteer = curand_uniform(randomState + threadIdx.x);
 
+
     if (wf > wl && wf > wr)
     {
-        agents[agentIdx].angle += 0;
+        agent->angle += 0;
     }
     else if (wf < wl && wf < wr)
     {
-        agents[agentIdx].angle += (randomSteer - 0.5) * 2 * turnSpeed; // TODO * deltaTime
+        agent->angle += (randomSteer - 0.5) * 2 * turnSpeed * deltaTime;
     }
     else if (wr > wl) {
-        agents[agentIdx].angle -= randomSteer * turnSpeed; // TODO * deltaTime
+        agent->angle -= randomSteer * turnSpeed * deltaTime;
     }
     else if (wl > wr)
     {
-        agents[agentIdx].angle += randomSteer * turnSpeed; // TODO * deltaTime
+        agent->angle += randomSteer * turnSpeed * deltaTime;
     }
 
     // Update position
-    float2 direction = make_float2(cosf(a.angle), sinf(a.angle));
-    float2 newPos = make_float2(deltaTime * speed * direction.x + a.pos.x, deltaTime * speed * direction.y + a.pos.y); // TODO * deltaTime
+    float2 direction = make_float2(cosf(agent->angle), sinf(agent->angle));
+    float2 newPos = make_float2(deltaTime * speed * direction.x + agent->pos.x, deltaTime * speed * direction.y + agent->pos.y);
 
     if (newPos.x < 0 || newPos.x >= width || newPos.y < 0 || newPos.y >= heigth)
     {
         newPos.x = min(width - 0.01, max(0.0, newPos.x));
         newPos.y = min(heigth - 0.01, max(0.0, newPos.y));
-        agents[agentIdx].angle = curand_uniform(randomState + threadIdx.x) * 2 * PI;
+        agent->angle = curand_uniform(randomState + threadIdx.x) * 2 * PI;
     }
     else
     {
         int idx = __float2uint_rd(newPos.x) + __float2uint_rd(newPos.y) * width;
-        float value =  min(1.0f, imgPtr[idx].r + trailDeltaW);
-        imgPtr[idx] = RGB{value, value, value};
+        float3 value = make_float3(imgPtr[idx].r, imgPtr[idx].g, imgPtr[idx].b);
+        value.x = min(1.0f, value.x + agent->speciesMask.x * trailDeltaW);
+        value.y = min(1.0f, value.y + agent->speciesMask.y * trailDeltaW);
+        value.z = min(1.0f, value.z + agent->speciesMask.z * trailDeltaW);
+        imgPtr[idx] = RGB{value.x, value.y, value.z};
     }
     
-    agents[agentIdx].pos = newPos;
+    agent->pos = newPos;
 }
 
 __device__ float sense(Agent a, float sensorAngleOffset, RGB* imgPtr, float sensorOffsetDst, int sensorSize, unsigned int width, unsigned int heigth)
@@ -146,7 +150,11 @@ __device__ float sense(Agent a, float sensorAngleOffset, RGB* imgPtr, float sens
     float2 sensorDir = make_float2(cosf(sensorAngle), sinf(sensorAngle));
     int2 sensorCentre = make_int2(a.pos.x + sensorDir.x * sensorOffsetDst, a.pos.y + sensorDir.y * sensorOffsetDst);
     
-    RGB sum = RGB{0.0, 0.0, 0.0};
+    float sum = 0.0f;
+
+    int senseWeightX = a.speciesMask.x * 2 - 1;
+    int senseWeightY = a.speciesMask.y * 2 - 1;
+    int senseWeightZ = a.speciesMask.z * 2 - 1;
 
     for (int ox = -sensorSize; ox <= sensorSize; ox++)
     {
@@ -157,15 +165,13 @@ __device__ float sense(Agent a, float sensorAngleOffset, RGB* imgPtr, float sens
             if (pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < heigth)
             {
                 int idx = pos.x + pos.y * width;
-                sum.r += imgPtr[idx].r;
-                sum.g += imgPtr[idx].g;
-                sum.b += imgPtr[idx].b;
-
-                //imgPtr[idx].r = 1.0; // MARK
+                sum += imgPtr[idx].r * senseWeightX
+                    + imgPtr[idx].g * senseWeightY
+                    + imgPtr[idx].b * senseWeightZ;
             }
         }
     }
-    return sum.r + sum.g + sum.b;
+    return sum;
 }
 
 void kl_initCurand32(dim3 grid, dim3 block,
