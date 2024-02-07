@@ -12,8 +12,8 @@ Image::Image(unsigned int width, unsigned int heigth)
     else             height_ = heigth;
 
     pixels_ = width_ * height_;
-    imagePtr_ = std::make_unique<RGB[]>(pixels_);
-    std::fill(imagePtr_.get(), imagePtr_.get() + pixels_, RGB{0, 0, 0});
+    imagePtr_ = std::make_unique<RGBA[]>(pixels_);
+    std::fill(imagePtr_.get(), imagePtr_.get() + pixels_, RGBA{0.0f, 0.0f, 0.0f, 1.0f});
 }
 
 Image::~Image()
@@ -36,7 +36,7 @@ void Image::randomize()
 
 }
 
-void Image::setColor(RGB color)
+void Image::setColor(RGBA color)
 {
     for (int y = 0; y < height_; y++)
     {
@@ -47,7 +47,7 @@ void Image::setColor(RGB color)
     }
 }
 
-void Image::drawCircle(unsigned int cx, unsigned int cy, unsigned int radius, RGB rgb)
+void Image::drawCircle(unsigned int cx, unsigned int cy, unsigned int radius, RGBA rgb)
 {
     unsigned int r2 = radius * radius;
     for (int y = 0; y < height_; y++)

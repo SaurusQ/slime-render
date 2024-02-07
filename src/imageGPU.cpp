@@ -191,7 +191,7 @@ void ImageGPU::imgToPadded()
 {
     REQUIRE_CUDA
     this->checkCudaError(
-        cudaMemcpy2D((void*)(imgPadCudaArray_ + padding_ + padWidth_ * padding_), padWidth_ * sizeof(RGB), (void*)imgCudaArray_, width_ * sizeof(RGB), width_ * sizeof(RGB), height_, cudaMemcpyDeviceToDevice),
+        cudaMemcpy2D((void*)(imgPadCudaArray_ + padding_ + padWidth_ * padding_), padWidth_ * sizeof(RGBA), (void*)imgCudaArray_, width_ * sizeof(RGBA), width_ * sizeof(RGBA), height_, cudaMemcpyDeviceToDevice),
         "cudaMemcpy imgToPadded()"
     );
 }
@@ -235,7 +235,7 @@ void ImageGPU::updateTrailMap(double deltaTime, float diffuseWeight, float evapo
 
     dim3 grid(width_ / 32, height_ / 32);
     dim3 block(32, 32);
-    kl_updateTrailMap(grid, block, deltaTime, (RGB*)imgCudaArray_, (RGB*)imgPadCudaArray_, relativeIdxsGPUptr_, diffuseWeight * deltaTime, evaporateWeight * deltaTime, width_, padWidth_, padding_, padOffset);
+    kl_updateTrailMap(grid, block, deltaTime, reinterpret_cast<float4*>(imgCudaArray_), reinterpret_cast<float4*>(imgPadCudaArray_), relativeIdxsGPUptr_, diffuseWeight * deltaTime, evaporateWeight * deltaTime, width_, padWidth_, padding_, padOffset);
     this->checkCudaError(cudaGetLastError(), "kl_convolution");
 
     cudaDeviceSynchronize();
@@ -369,7 +369,7 @@ void ImageGPU::updateAgents(double deltaTime, float trailWeight)
     REQUIRE_CUDA
     dim3 grid(std::ceil(nAgents_ / 32.0), 1);
     dim3 block(32, 1);
-    kl_updateAgents(grid, block, deltaTime, agentRandomState_, imgCudaArray_, agents_, nAgents_,
+    kl_updateAgents(grid, block, deltaTime, agentRandomState_, reinterpret_cast<float4*>(imgCudaArray_), agents_, nAgents_,
         agentConfig_.speed,
         agentConfig_.turnSpeed,
         agentConfig_.sensorAngleSpacing,
