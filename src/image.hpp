@@ -11,17 +11,17 @@ public:
     Image(unsigned int width, unsigned int height);
     ~Image();
     void randomize();
-    void setColor(RGB color);
-    void drawCircle(unsigned int x, unsigned int y, unsigned int radius, RGB rgb);
+    void setColor(RGBA color);
+    void drawCircle(unsigned int x, unsigned int y, unsigned int radius, RGBA rgb);
     void colorOneByOne();
-    const RGB* getPtr() const { return imagePtr_.get(); }
+    const RGBA* getPtr() const { return imagePtr_.get(); }
     unsigned int getWidth() const { return width_; }
     unsigned int getHeigth() const { return height_; }
-    unsigned int getBufferSize() const { return pixels_ * sizeof(RGB); }
-    unsigned int getPaddedBufferSize(unsigned int padding) const { return (width_ + padding * 2) * (height_ + padding * 2) * sizeof(RGB); }
+    unsigned int getBufferSize() const { return pixels_ * sizeof(RGBA); }
+    unsigned int getPaddedBufferSize(unsigned int padding) const { return (width_ + padding * 2) * (height_ + padding * 2) * sizeof(RGBA); }
 private:
     unsigned int width_;
     unsigned int height_;
     unsigned int pixels_;
-    std::unique_ptr<RGB[]> imagePtr_;
+    std::unique_ptr<RGBA[]> imagePtr_;
 };

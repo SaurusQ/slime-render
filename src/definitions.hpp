@@ -14,11 +14,12 @@ constexpr unsigned int H_4K = 1440;
 constexpr unsigned int W_4K = 320;
 constexpr unsigned int H_4K = 180;
 #endif
-struct RGB
+struct RGBA
 {
     float r;
     float g;
     float b;
+    float a;
 };
 
 struct Agent

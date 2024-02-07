@@ -6,8 +6,8 @@
 
 void kl_updateTrailMap(dim3 grid, dim3 block,
     double deltaTime,
-    RGB* imgPtr,
-    RGB* imgPadPtr,
+    float4* imgPtr,
+    float4* imgPadPtr,
     int* relativeIdxs,
     float diffuseDeltaW,
     float evaporateDeltaW,
@@ -22,8 +22,8 @@ void kl_updateTrailMap(dim3 grid, dim3 block,
 
 __global__ void k_updateTrailMap(
     double deltaTime,
-    RGB* imgPtr,
-    RGB* imgPadPtr,
+    float4* imgPtr,
+    float4* imgPadPtr,
     int* relativeIdxs,
     float diffuseDeltaW,
     float evaporateDeltaW,
@@ -45,23 +45,23 @@ __global__ void k_updateTrailMap(
     float valueB = 0;
     for (int i = 0; i < 9; i++) // 3x3 grid
     {
-        valueR += imgPadPtr[idxPad + relativeIdxs[i]].r;
-        valueG += imgPadPtr[idxPad + relativeIdxs[i]].g;
-        valueB += imgPadPtr[idxPad + relativeIdxs[i]].b;
+        valueR += imgPadPtr[idxPad + relativeIdxs[i]].x;
+        valueG += imgPadPtr[idxPad + relativeIdxs[i]].y;
+        valueB += imgPadPtr[idxPad + relativeIdxs[i]].z;
     }    
-    float diffusedR = imgPadPtr[idxPad].r * (1 - diffuseDeltaW) + (valueR / 9.0) * (diffuseDeltaW);
-    float diffusedG = imgPadPtr[idxPad].g * (1 - diffuseDeltaW) + (valueB / 9.0) * (diffuseDeltaW);
-    float diffusedB = imgPadPtr[idxPad].b * (1 - diffuseDeltaW) + (valueG / 9.0) * (diffuseDeltaW);
+    float diffusedR = imgPadPtr[idxPad].x * (1 - diffuseDeltaW) + (valueR / 9.0) * (diffuseDeltaW);
+    float diffusedG = imgPadPtr[idxPad].y * (1 - diffuseDeltaW) + (valueB / 9.0) * (diffuseDeltaW);
+    float diffusedB = imgPadPtr[idxPad].z * (1 - diffuseDeltaW) + (valueG / 9.0) * (diffuseDeltaW);
     // Evaporate
-    imgPtr[idx].r = max(0.0, diffusedR - evaporateDeltaW);
-    imgPtr[idx].g = max(0.0, diffusedG - evaporateDeltaW);
-    imgPtr[idx].b = max(0.0, diffusedB - evaporateDeltaW);
+    imgPtr[idx].x = max(0.0, diffusedR - evaporateDeltaW);
+    imgPtr[idx].y = max(0.0, diffusedG - evaporateDeltaW);
+    imgPtr[idx].z = max(0.0, diffusedB - evaporateDeltaW);
 }
 
 void kl_updateAgents(dim3 grid, dim3 block,
     double deltaTime,
     curandState* randomState,
-    RGB* imgPtr,
+    float4* imgPtr,
     Agent* agents,
     unsigned int nAgents,
     float speed,
@@ -80,7 +80,7 @@ void kl_updateAgents(dim3 grid, dim3 block,
 __global__ void k_updateAgents(
     double deltaTime,
     curandState* randomState,
-    RGB* imgPtr,
+    float4* imgPtr,
     Agent* agents,
     unsigned int nAgents,
     float speed,
@@ -134,17 +134,17 @@ __global__ void k_updateAgents(
     else
     {
         int idx = __float2uint_rd(newPos.x) + __float2uint_rd(newPos.y) * width;
-        float3 value = make_float3(imgPtr[idx].r, imgPtr[idx].g, imgPtr[idx].b);
+        float4 value = imgPtr[idx];
         value.x = min(1.0f, value.x + agent->speciesMask.x * trailDeltaW);
         value.y = min(1.0f, value.y + agent->speciesMask.y * trailDeltaW);
         value.z = min(1.0f, value.z + agent->speciesMask.z * trailDeltaW);
-        imgPtr[idx] = RGB{value.x, value.y, value.z};
+        imgPtr[idx] = float4{value.x, value.y, value.z, value.w};
     }
     
     agent->pos = newPos;
 }
 
-__device__ float sense(Agent a, float sensorAngleOffset, RGB* imgPtr, float sensorOffsetDst, int sensorSize, unsigned int width, unsigned int heigth)
+__device__ float sense(Agent a, float sensorAngleOffset, float4* imgPtr, float sensorOffsetDst, int sensorSize, unsigned int width, unsigned int heigth)
 {
     float sensorAngle = a.angle + sensorAngleOffset;
     float2 sensorDir = make_float2(cosf(sensorAngle), sinf(sensorAngle));
@@ -165,9 +165,9 @@ __device__ float sense(Agent a, float sensorAngleOffset, RGB* imgPtr, float sens
             if (pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < heigth)
             {
                 int idx = pos.x + pos.y * width;
-                sum += imgPtr[idx].r * senseWeightX
-                    + imgPtr[idx].g * senseWeightY
-                    + imgPtr[idx].b * senseWeightZ;
+                sum += imgPtr[idx].x * senseWeightX
+                    + imgPtr[idx].y * senseWeightY
+                    + imgPtr[idx].z * senseWeightZ;
             }
         }
     }

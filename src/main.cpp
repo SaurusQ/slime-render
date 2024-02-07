@@ -212,11 +212,10 @@ int main()
 #endif
 
     Image img{W_4K, H_4K};
-    //Image img{320, 180};
     ImageGPU imgGPU{img, 100};
     GLuint texture = imgGPU.getTexture();
     imgGPU.activateCuda();
-    img.setColor(RGB{0.0, 0.0, 0.0});
+    img.setColor(RGBA{0.0f, 0.0f, 0.0f, 1.0f});
     //img.drawCircle(100, 1, 10, RGB{1.0, 0, 0});
     //img.randomize();
     imgGPU.update(img);
@@ -224,8 +223,8 @@ int main()
 
     imgGPU.configAgentParameters(imgConfig.ac);
 
-    unsigned int IMG_W = img.getWidth();
-    unsigned int IMG_H = img.getHeigth();
+    const unsigned int IMG_W = img.getWidth();
+    const unsigned int IMG_H = img.getHeigth();
 
     double currentTime = glfwGetTime();
     double lastTime = currentTime;
@@ -263,7 +262,7 @@ int main()
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, imgGPU.getPbo());
 
         //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width_, height_, 0, GL_RGB, GL_FLOAT, NULL);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, IMG_W, IMG_H, 0, GL_RGB, GL_FLOAT, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, IMG_W, IMG_H, 0, GL_RGBA, GL_FLOAT, 0);
         //glGenerateMipmap(GL_TEXTURE_2D);
 
         //glBindTexture(GL_TEXTURE_2D, texture);

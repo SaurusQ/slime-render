@@ -52,8 +52,8 @@ private:
     void imgToPadded();
 
     cudaGraphicsResource_t cudaPboResource_ = nullptr;
-    RGB* imgCudaArray_ = nullptr;
-    RGB* imgPadCudaArray_ = nullptr;
+    RGBA* imgCudaArray_ = nullptr;
+    RGBA* imgPadCudaArray_ = nullptr;
     GLuint texture_ = 0;
     GLuint pbo_ = 0;
 
