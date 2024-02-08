@@ -51,12 +51,20 @@ enum class StartFormation {
 struct SimConfig
 {
     AgentConfig ac;
+    float agentShare[4];
     int numAgents;
     float evaporate;
     float diffuse;
     float trailWeight;
     bool updateAgents;
-    bool clearImg;
     bool clearOnSpawn;
     StartFormation startFormation;
+};
+
+struct SimUpdate
+{
+    bool agentSettings;
+    bool spawn;
+    bool population;
+    bool clearImg;
 };

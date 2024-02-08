@@ -29,12 +29,12 @@ SimConfig simConfig
         9.0,
         0
     },
+    {1.0f, 0.0f, 0.0f, 0.0f},
     1000,           // num agents
     0.2,            // evaporate        0.027
     10.0,           // diffuse          50
-    20.0f,          // trail weight 
+    20.0f,          // trail weight
     false, // update agents
-    false, // clear img
     true,  // clear on spawn
     StartFormation::MIDDLE
 };
@@ -230,6 +230,8 @@ int main()
     double lastTime = currentTime;
     double deltaTime;
 
+    SimUpdate simUpdate{false, false, false, false};
+
     while (!glfwWindowShouldClose(window))
     {
         lastTime = currentTime;
@@ -239,13 +241,17 @@ int main()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (simConfig.startFormation != StartFormation::CONFIGURED)
+        if (simUpdate.spawn)
         {
-            simulation.spawnAgents(simConfig.numAgents, simConfig.startFormation, simConfig.clearOnSpawn);
+            simulation.spawnAgents(simConfig.agents, simConfig.startFormation, simConfig.clearOnSpawn);
             simConfig.startFormation = StartFormation::CONFIGURED;
         }
-        simulation.updatePopulationSize(simConfig.numAgents);
-        if (simConfig.clearImg)
+        else if (simUpdate.population)
+        {
+            simulation.updatePopulationSize(simConfig.agents);
+        }
+
+        if (simUpdate.clearImg)
         {
             simulation.clearImage();
             simConfig.clearImg = false;

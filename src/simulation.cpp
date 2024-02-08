@@ -254,9 +254,15 @@ void Simulation::updateTrailMap(double deltaTime, float diffuseWeight, float eva
     cudaDeviceSynchronize();
 }
 
-void Simulation::spawnAgents(unsigned int num, StartFormation startFormation, bool clear)
+void Simulation::spawnAgents(unsigned int newAgents, float* agentShares, StartFormation startFormation, bool clear)
 {
-    nAgents_ = num;
+    nAgents_ = newAgents;
+    unsigned int spawnableAgentPopulations[4];
+    for (int i = 0; i < 4; i++) 
+    {
+        agentPopulations_[i] = agentShares[i] * nAgents_;
+        spawnableAgentPopulations = agentPopulations_[i];
+    }
     if (agents_ != nullptr) cudaFree(agents_);
     nAgentsGpuSize_ = roundUpToPowerOfTwo(nAgents_);
     this->checkCudaError(
@@ -273,6 +279,8 @@ void Simulation::spawnAgents(unsigned int num, StartFormation startFormation, bo
 
     std::unique_ptr<Agent[]> cpuAgents = std::make_unique<Agent[]>(nAgents_);
     
+    int populationIdx = 0;
+
     for (int i = 0; i < nAgents_; i++)
     {
         Agent ag;
@@ -301,8 +309,14 @@ void Simulation::spawnAgents(unsigned int num, StartFormation startFormation, bo
                 break;
             }
         }
-        ag.speciesMask = {1, 0, 0, 0};
-        ag.speciesIdx = 0;
+
+        while (spawnableAgentPopulations[idx] == 0 && idx < 4) idx++;
+
+        spawnableAgentPopulations[idx]--;
+
+        ag.speciesMask = {idx == 0 ? 1 : 0, idx == 1 ? 1 : 0, idx == 2 ? 1 : 0, idx == 3 ? 1 : 0}
+        ag.speciesIdx = idx;
+
         cpuAgents[i] = ag;
     }
     
@@ -324,14 +338,14 @@ void Simulation::spawnAgents(unsigned int num, StartFormation startFormation, bo
     kl_initCurand32(grid, block, agentRandomState_);
 }
 
-void Simulation::updatePopulationSize(unsigned int num)
+void Simulation::updatePopulationSize(unsigned int newAgents)
 {
-    if (nAgents_ == num) return;
+    if (nAgents_ == newAgents) return;
 
-    if (nAgentsGpuSize_ < num || nAgentsGpuSize_ > roundUpToPowerOfTwo(num)) {
+    if (nAgentsGpuSize_ < newAgents || nAgentsGpuSize_ > roundUpToPowerOfTwo(newAgents)) {
         
-        std::cout << "round p2: " << num << " | " << roundUpToPowerOfTwo(num) << std::endl;
-        unsigned int newArraySize = roundUpToPowerOfTwo(num);
+        std::cout << "round p2: " << newAgents << " | " << roundUpToPowerOfTwo(newAgents) << std::endl;
+        unsigned int newArraySize = roundUpToPowerOfTwo(newAgents);
         std::cout << "Resizing array " << nAgents_ << " -> " << newArraySize << std::endl; 
         Agent* newArray;
         this->checkCudaError(
@@ -339,19 +353,20 @@ void Simulation::updatePopulationSize(unsigned int num)
             "cudaMalloc agents"
         );
         this->checkCudaError(
-            cudaMemcpy(newArray, agents_, std::min(nAgents_, num) * sizeof(Agent), cudaMemcpyDeviceToDevice),
+            cudaMemcpy(newArray, agents_, std::min(nAgents_, newAgents) * sizeof(Agent), cudaMemcpyDeviceToDevice),
             "cudaMemcpy oldAgents to new agent array from gpu to gpu"
         );
         cudaFree(agents_);
         agents_ = newArray;
         nAgentsGpuSize_ = newArraySize;
     }
-    if (nAgents_ < num) // We need to set the parameters of the new agents
+
+    if (nAgents_ < newAgents) // We need to set the parameters of the new agents
     {
-        std::cout << "agents old: " << nAgents_ << " agents new: " << num << std::endl;
-        while (num - nAgents_ > nAgents_) // Added too many agents to make unique copies
+        std::cout << "agents old: " << nAgents_ << " agents new: " << newAgents << std::endl;
+        while (newAgents - nAgents_ > nAgents_) // Added too many agents to make unique copies
         {
-            unsigned int newAgents = num - nAgents_;
+            unsigned int newAgents = newAgents - nAgents_;
             std::cout << "adding copying new agents " << newAgents << std::endl;
             this->checkCudaError(
                 cudaMemcpy(agents_ + nAgents_, agents_, nAgents_ * sizeof(Agent), cudaMemcpyDeviceToDevice),
@@ -359,22 +374,27 @@ void Simulation::updatePopulationSize(unsigned int num)
             );
             nAgents_ += nAgents_;
         }
-        if (nAgents_ != num)
+        if (nAgents_ != newAgents)
         {
             std::random_device rd;
             std::mt19937 gen(rd());
-            std::uniform_int_distribution<int> dist(0, nAgents_ - 1 - (num - nAgents_));
+            std::uniform_int_distribution<int> dist(0, nAgents_ - 1 - (newAgents - nAgents_));
             unsigned int idx = dist(gen);
             std::cout << "copyging random part from the gpu" << " dist: " << idx << std::endl;
-            if (idx + (num - nAgents_) > nAgents_) std::cout << "FAILURE IN IDX ########" << std::endl;
+            if (idx + (newAgents - nAgents_) > nAgents_) std::cout << "FAILURE IN IDX ########" << std::endl;
             this->checkCudaError(
-                cudaMemcpy(agents_ + nAgents_, agents_ + idx, (num - nAgents_) * sizeof(Agent), cudaMemcpyDeviceToDevice),
+                cudaMemcpy(agents_ + nAgents_, agents_ + idx, (newAgents - nAgents_) * sizeof(Agent), cudaMemcpyDeviceToDevice),
                 "cudaMemcpy agent from gpu to gpu"
             );
         }
     }
-    nAgents_ = num;
+    nAgents_ = newAgents;
     std::cout << "Final count: " << nAgents_ << std::endl;
+}
+
+void Simulation::updatePopulationShare(float* newPopulationShare)
+{
+
 }
 
 void Simulation::updateAgents(double deltaTime, float trailWeight)

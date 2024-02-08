@@ -15,5 +15,5 @@ public:
 
     void update(GLFWwindow* wnd, SimConfig& ic);
 private:
-
+    void balanceShare(float changed, float& a, float& b, float& c);
 };
