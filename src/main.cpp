@@ -1,5 +1,5 @@
 #include "image.hpp"
-#include "imageGPU.hpp"
+#include "simulation.hpp"
 #include "shaderHandler.hpp"
 #include "definitions.hpp"
 
@@ -212,7 +212,7 @@ int main()
 #endif
 
     Image img{W_4K, H_4K};
-    ImageGPU imgGPU{img, 100};
+    Simulation imgGPU{img, 100};
     GLuint texture = imgGPU.getTexture();
     imgGPU.activateCuda();
     img.setColor(RGBA{0.0f, 0.0f, 0.0f, 1.0f});

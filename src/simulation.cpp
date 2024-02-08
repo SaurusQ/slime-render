@@ -1,4 +1,4 @@
-#include "imageGPU.hpp"
+#include "simulation.hpp"
 #include "cudaKernels.cuh"
 
 #include <cuda_gl_interop.h>
@@ -30,7 +30,7 @@ unsigned int roundUpToPowerOfTwo(unsigned int x) {
     return x;
 }
 
-ImageGPU::ImageGPU(const Image& img, unsigned int padding)
+Simulation::Simulation(const Image& img, unsigned int padding)
     : padding_(padding)
 {
     width_              = img.getWidth();
@@ -54,7 +54,7 @@ ImageGPU::ImageGPU(const Image& img, unsigned int padding)
     this->deactivateCuda();
 }
 
-ImageGPU::~ImageGPU()
+Simulation::~Simulation()
 {
     cudaFree((void*)imgPadCudaArray_);
     cudaGraphicsUnregisterResource(cudaPboResource_);
@@ -75,7 +75,7 @@ ImageGPU::~ImageGPU()
     if (agents_ != nullptr) cudaFree(agents_);
 }
 
-void ImageGPU::activateCuda()
+void Simulation::activateCuda()
 {
     if (cudaPboResource_ != nullptr)
     {
@@ -98,7 +98,7 @@ void ImageGPU::activateCuda()
     }
 }
 
-void ImageGPU::deactivateCuda()
+void Simulation::deactivateCuda()
 {
     cudaActive_ = false;
     if (cudaPboResource_ != nullptr)
@@ -107,7 +107,7 @@ void ImageGPU::deactivateCuda()
     }
 }
 
-void ImageGPU::update(const Image& img)
+void Simulation::update(const Image& img)
 {
     REQUIRE_CUDA
     if(img.getBufferSize() != bufferSize_)
@@ -122,7 +122,7 @@ void ImageGPU::update(const Image& img)
     cudaDeviceSynchronize();
 }
 
-void ImageGPU::readBack(const Image& img) const
+void Simulation::readBack(const Image& img) const
 {
     REQUIRE_CUDA
     /*this->checkCudaError(
@@ -131,7 +131,7 @@ void ImageGPU::readBack(const Image& img) const
     );*/
 }
 
-void ImageGPU::clearImage()
+void Simulation::clearImage()
 {
     if (imgCudaArray_)
     {
@@ -143,7 +143,7 @@ void ImageGPU::clearImage()
     }
 }
 
-void ImageGPU::loadTexture()
+void Simulation::loadTexture()
 {
     // Pixel buffer object
     glGenBuffers(1, &pbo_);
@@ -176,7 +176,7 @@ void ImageGPU::loadTexture()
     cudaDeviceSynchronize();
 }
 
-bool ImageGPU::checkCudaError(cudaError_t ce, std::string msg) const
+bool Simulation::checkCudaError(cudaError_t ce, std::string msg) const
 {
     bool failure = ce != cudaSuccess;
     if(failure)
@@ -187,7 +187,7 @@ bool ImageGPU::checkCudaError(cudaError_t ce, std::string msg) const
     return failure;
 }
 
-void ImageGPU::imgToPadded()
+void Simulation::imgToPadded()
 {
     REQUIRE_CUDA
     this->checkCudaError(
@@ -196,7 +196,7 @@ void ImageGPU::imgToPadded()
     );
 }
 
-void ImageGPU::updateTrailMap(double deltaTime, float diffuseWeight, float evaporateWeight)
+void Simulation::updateTrailMap(double deltaTime, float diffuseWeight, float evaporateWeight)
 {
     REQUIRE_CUDA
     //unsigned int kernelValues = (kernelSize * 2 + 1) * (kernelSize * 2 + 1);
@@ -241,7 +241,7 @@ void ImageGPU::updateTrailMap(double deltaTime, float diffuseWeight, float evapo
     cudaDeviceSynchronize();
 }
 
-void ImageGPU::spawnAgents(unsigned int num, StartFormation startFormation, bool clear)
+void Simulation::spawnAgents(unsigned int num, StartFormation startFormation, bool clear)
 {
     nAgents_ = num;
     if (agents_ != nullptr) cudaFree(agents_);
@@ -311,7 +311,7 @@ void ImageGPU::spawnAgents(unsigned int num, StartFormation startFormation, bool
     kl_initCurand32(grid, block, agentRandomState_);
 }
 
-void ImageGPU::updatePopulationSize(unsigned int num)
+void Simulation::updatePopulationSize(unsigned int num)
 {
     if (nAgents_ == num) return;
 
@@ -364,7 +364,7 @@ void ImageGPU::updatePopulationSize(unsigned int num)
     std::cout << "Final count: " << nAgents_ << std::endl;
 }
 
-void ImageGPU::updateAgents(double deltaTime, float trailWeight)
+void Simulation::updateAgents(double deltaTime, float trailWeight)
 {
     REQUIRE_CUDA
     dim3 grid(std::ceil(nAgents_ / 32.0), 1);

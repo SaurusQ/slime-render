@@ -11,11 +11,11 @@
 #include <unordered_map>
 #include <cmath>
 
-class ImageGPU
+class Simulation
 {
 public:
-    ImageGPU(const Image& img, unsigned int padding);
-    ~ImageGPU();
+    Simulation(const Image& img, unsigned int padding);
+    ~Simulation();
 
     void activateCuda();
     void deactivateCuda();
