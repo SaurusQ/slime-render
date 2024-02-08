@@ -38,6 +38,8 @@ Simulation::Simulation(const Image& img)
     bufferSize_         = img.getBufferSize();
     bufferSizePadded_   = img.getPaddedBufferSize(padding_);
     padWidth_           = 2 * padding_ + width_;
+    padOffset_ = padding_ * padWidth_ + padding_;
+
 
     this->checkCudaError(
         cudaMalloc((void**)&trailMapFront_, bufferSizePadded_),
@@ -200,12 +202,12 @@ bool Simulation::checkCudaError(cudaError_t ce, std::string msg) const
     return failure;
 }
 
-void Simulation::imgToPadded()
+void Simulation::trailMapToResult()
 {
     REQUIRE_CUDA
     this->checkCudaError(
         cudaMemcpy2D((void*)(trailMapFront_ + padding_ + padWidth_ * padding_), padWidth_ * sizeof(RGBA), (void*)resultCudaImg_, width_ * sizeof(RGBA), width_ * sizeof(RGBA), height_, cudaMemcpyDeviceToDevice),
-        "cudaMemcpy imgToPadded()"
+        "cudaMemcpy trailMapToResult()"
     );
 }
 
@@ -244,8 +246,6 @@ void Simulation::updateTrailMap(double deltaTime, float diffuseWeight, float eva
         );
     }
 
-    unsigned int padOffset = padding_ * padWidth_ + padding_;
-
     dim3 grid(width_ / 32, height_ / 32);
     dim3 block(32, 32);
     kl_updateTrailMap(grid, block,
@@ -255,7 +255,7 @@ void Simulation::updateTrailMap(double deltaTime, float diffuseWeight, float eva
         diffuseWeight * deltaTime,
         evaporateWeight * deltaTime,
         padWidth_,
-        padOffset
+        padOffset_
     );
     this->checkCudaError(cudaGetLastError(), "kl_updateTrailMap");
 
@@ -397,5 +397,8 @@ void Simulation::updateAgents(double deltaTime, float trailWeight)
         agentConfig_.sensorOffsetDst,
         agentConfig_.sensorSize,
         static_cast<float>(trailWeight * deltaTime),
-        width_, height_);
+        width_,
+        height_,
+        padWidth_,
+        padOffset_);
 }

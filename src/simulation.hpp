@@ -29,6 +29,7 @@ public:
     GLuint getPbo() const { return pbo_; }
 
     // GPU mods
+    void trailMapToResult();
     void updateTrailMap(double deltaTime, float diffuseWeight, float evaporateWeight);
     void spawnAgents(unsigned int num, StartFormation startFormation, bool clear);
     void updatePopulationSize(unsigned int num);
@@ -50,7 +51,6 @@ public:
 private:
     void loadTexture();
     bool checkCudaError(cudaError_t cs, std::string msg) const;
-    void imgToPadded();
 
     cudaGraphicsResource_t cudaPboResource_ = nullptr;
     RGBA* resultCudaImg_ = nullptr;
@@ -67,6 +67,7 @@ private:
     unsigned int bufferSizePadded_;
     unsigned int padding_;
     unsigned int padWidth_;
+    unsigned int padOffset_;
 
     // Trail map
     int* relativeIdxsGPUptr_ = nullptr;
