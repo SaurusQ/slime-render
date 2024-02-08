@@ -43,7 +43,7 @@ __global__ void k_updateTrailMap(
     int idxPad = padOffset + x + y * padWidth;
 
     // Diffuse
-    float4 sum;
+    float4 sum{0.0f, 0.0f, 0.0f, 0.0f};
     for (int i = 0; i < 9; i++) // 3x3 grid
     {
         sum = sum + trailMapBack[idxPad + relativeIdxs[i]];
@@ -57,7 +57,12 @@ __global__ void k_updateTrailMap(
     trailMapFront[idxPad].x = max(0.0f, diffusedX - evaporateDT);
     trailMapFront[idxPad].y = max(0.0f, diffusedY - evaporateDT);
     trailMapFront[idxPad].z = max(0.0f, diffusedZ - evaporateDT);
-    trailMapFront[idxPad].w = max(0.0f, diffusedW - evaporateDT);
+    //trailMapFront[idxPad].w = max(0.0f, diffusedW - evaporateDT);
+
+    //trailMapFront[idxPad].x = 1.0f;
+    //trailMapFront[idxPad].y = 1.0f;
+    //trailMapFront[idxPad].z = 1.0f;
+    trailMapFront[idxPad].w = 1.0f;
 }
 
 void kl_updateAgents(dim3 grid, dim3 block,
@@ -144,6 +149,7 @@ __global__ void k_updateAgents(
         value.z = min(1.0f, value.z + agent->speciesMask.z * trailWeightDT);
         value.w = min(1.0f, value.w + agent->speciesMask.w * trailWeightDT);
         trailMap[idxPad] = make_float4(value.x, value.y, value.z, value.w);
+        trailMap[idxPad] = make_float4(1.0f, 1.0f, 1.0f, 1.0f);
     }
     
     agent->pos = newPos;
@@ -184,8 +190,8 @@ __device__ float sense(
                 sum += 
                       trailMap[idxPad].x * senseWeightX
                     + trailMap[idxPad].y * senseWeightY
-                    + trailMap[idxPad].z * senseWeightZ
-                    + trailMap[idxPad].w * senseWeightW;
+                    + trailMap[idxPad].z * senseWeightZ;
+                    //+ trailMap[idxPad].w * senseWeightW;
             }
         }
     }

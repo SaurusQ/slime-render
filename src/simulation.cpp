@@ -49,10 +49,6 @@ Simulation::Simulation(const Image& img)
         cudaMalloc((void**)&trailMapBack_, bufferSizePadded_),
         "cudaMalloc trailMapBack_"
     );
-    this->checkCudaError(
-        cudaMalloc((void**)&resultCudaImg_, bufferSize_),
-        "cudaMalloc resultCudaImg_"
-    );
 
     this->checkCudaError(
         cudaMemset((void*)trailMapFront_, 0, bufferSizePadded_),
@@ -61,10 +57,6 @@ Simulation::Simulation(const Image& img)
     this->checkCudaError(
         cudaMemset((void*)trailMapBack_, 0, bufferSizePadded_),
         "cudaMemset trailMapBack_"
-    );
-    this->checkCudaError(
-        cudaMemset((void*)resultCudaImg_, 0, bufferSize_),
-        "cudaMemset resultCudaImg_"
     );
 
     this->loadTexture();
@@ -206,7 +198,7 @@ void Simulation::trailMapToResult()
 {
     REQUIRE_CUDA
     this->checkCudaError(
-        cudaMemcpy2D((void*)(trailMapFront_ + padding_ + padWidth_ * padding_), padWidth_ * sizeof(RGBA), (void*)resultCudaImg_, width_ * sizeof(RGBA), width_ * sizeof(RGBA), height_, cudaMemcpyDeviceToDevice),
+        cudaMemcpy2D((void*)resultCudaImg_, width_ * sizeof(RGBA), (void*)(trailMapFront_ + padOffset_), padWidth_ * sizeof(RGBA), width_ * sizeof(RGBA), height_, cudaMemcpyDeviceToDevice),
         "cudaMemcpy trailMapToResult()"
     );
 }
@@ -390,7 +382,11 @@ void Simulation::updateAgents(double deltaTime, float trailWeight)
     REQUIRE_CUDA
     dim3 grid(std::ceil(nAgents_ / 32.0), 1);
     dim3 block(32, 1);
-    kl_updateAgents(grid, block, agentRandomState_, reinterpret_cast<float4*>(trailMapFront_), agents_, nAgents_,
+    kl_updateAgents(grid, block,
+        agentRandomState_,
+        reinterpret_cast<float4*>(trailMapFront_),
+        agents_,
+        nAgents_,
         agentConfig_.speed * deltaTime,
         agentConfig_.turnSpeed * deltaTime,
         agentConfig_.sensorAngleSpacing,

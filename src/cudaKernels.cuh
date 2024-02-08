@@ -7,8 +7,8 @@ void kl_updateTrailMap(dim3 grid, dim3 block,
     float4* trailMapFront,
     float4* trailMapBack,
     int* relativeIdxs,
-    float diffuseDeltaW,
-    float evaporateDeltaW,
+    float diffuseDT,
+    float evaporateDT,
     unsigned int padWidth,
     unsigned int padOffset
 );
@@ -17,8 +17,8 @@ __global__ void k_updateTrailMap(
     float4* trailMapFront,
     float4* trailMapBack,
     int* relativeIdxs,
-    float diffuseDeltaW,
-    float evaporateDeltaW,
+    float diffuseDT,
+    float evaporateDT,
     unsigned int padWidth,
     unsigned int padOffset
 );
