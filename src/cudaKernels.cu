@@ -4,32 +4,36 @@
 
 #define PI 3.141592653589793f
 
+__device__ float4 operator+(const float4 &a, const float4 &b)
+{
+    return make_float4(a.x + b.x, a.y + b.y, a.z + b.z, a.w + b.w);
+}
+
+__device__ float4 operator*(const float4 &a, const float4 &b)
+{
+    return make_float4(a.x * b.x, a.y * b.y, a.x* b.x, a.w * b.w);
+}
+
 void kl_updateTrailMap(dim3 grid, dim3 block,
-    double deltaTime,
-    float4* imgPtr,
-    float4* imgPadPtr,
+    float4* trailMapFront,
+    float4* trailMapBack,
     int* relativeIdxs,
-    float diffuseDeltaW,
-    float evaporateDeltaW,
-    unsigned int width,
+    float diffuseDT,
+    float evaporateDT,
     unsigned int padWidth,
-    unsigned int padding,
     unsigned int padOffset
 )
 {
-    k_updateTrailMap<<<grid, block>>>(deltaTime, imgPtr, imgPadPtr, relativeIdxs, diffuseDeltaW, evaporateDeltaW, width, padWidth, padding, padOffset);
+    k_updateTrailMap<<<grid, block>>>(trailMapFront, trailMapBack, relativeIdxs, diffuseDT, evaporateDT, padWidth, padOffset);
 }
 
 __global__ void k_updateTrailMap(
-    double deltaTime,
-    float4* imgPtr,
-    float4* imgPadPtr,
+    float4* trailMapFront,
+    float4* trailMapBack,
     int* relativeIdxs,
-    float diffuseDeltaW,
-    float evaporateDeltaW,
-    unsigned int width,
+    float diffuseDT,
+    float evaporateDT,
     unsigned int padWidth,
-    unsigned int padding,
     unsigned int padOffset
 )
 {
@@ -37,58 +41,54 @@ __global__ void k_updateTrailMap(
     int y = blockIdx.y * 32 + threadIdx.y;
 
     int idxPad = padOffset + x + y * padWidth;
-    int idx = x + y * width;
 
     // Diffuse
-    float valueR = 0;
-    float valueG = 0;
-    float valueB = 0;
+    float4 sum;
     for (int i = 0; i < 9; i++) // 3x3 grid
     {
-        valueR += imgPadPtr[idxPad + relativeIdxs[i]].x;
-        valueG += imgPadPtr[idxPad + relativeIdxs[i]].y;
-        valueB += imgPadPtr[idxPad + relativeIdxs[i]].z;
-    }    
-    float diffusedR = imgPadPtr[idxPad].x * (1 - diffuseDeltaW) + (valueR / 9.0) * (diffuseDeltaW);
-    float diffusedG = imgPadPtr[idxPad].y * (1 - diffuseDeltaW) + (valueB / 9.0) * (diffuseDeltaW);
-    float diffusedB = imgPadPtr[idxPad].z * (1 - diffuseDeltaW) + (valueG / 9.0) * (diffuseDeltaW);
+        sum = sum + trailMapBack[idxPad + relativeIdxs[i]];
+    }
+    float diffusedX = trailMapBack[idxPad].x * (1.0f - diffuseDT) + (sum.x / 9.0f) * (diffuseDT);
+    float diffusedY = trailMapBack[idxPad].y * (1.0f - diffuseDT) + (sum.y / 9.0f) * (diffuseDT);
+    float diffusedZ = trailMapBack[idxPad].z * (1.0f - diffuseDT) + (sum.z / 9.0f) * (diffuseDT);
+    float diffusedW = trailMapBack[idxPad].w * (1.0f - diffuseDT) + (sum.w / 9.0f) * (diffuseDT);
+
     // Evaporate
-    imgPtr[idx].x = max(0.0, diffusedR - evaporateDeltaW);
-    imgPtr[idx].y = max(0.0, diffusedG - evaporateDeltaW);
-    imgPtr[idx].z = max(0.0, diffusedB - evaporateDeltaW);
+    trailMapFront[idxPad].x = max(0.0f, diffusedX - evaporateDT);
+    trailMapFront[idxPad].y = max(0.0f, diffusedY - evaporateDT);
+    trailMapFront[idxPad].z = max(0.0f, diffusedZ - evaporateDT);
+    trailMapFront[idxPad].w = max(0.0f, diffusedW - evaporateDT);
 }
 
 void kl_updateAgents(dim3 grid, dim3 block,
-    double deltaTime,
     curandState* randomState,
     float4* imgPtr,
     Agent* agents,
     unsigned int nAgents,
-    float speed,
-    float turnSpeed,
+    float speedDT,
+    float turnSpeedDT,
     float sensorAngleSpacing,
     float sensorOffsetDst,
     unsigned int sensorSize,
-    float trailDeltaW,
+    float trailWeightDT,
     unsigned int width,
     unsigned int heigth
 )
 {
-    k_updateAgents<<<grid, block>>>(deltaTime, randomState, imgPtr, agents, nAgents, speed, turnSpeed, sensorAngleSpacing, sensorOffsetDst, sensorSize, trailDeltaW, width, heigth);
+    k_updateAgents<<<grid, block>>>(randomState, imgPtr, agents, nAgents, speedDT, turnSpeedDT, sensorAngleSpacing, sensorOffsetDst, sensorSize, trailWeightDT, width, heigth);
 }
 
 __global__ void k_updateAgents(
-    double deltaTime,
     curandState* randomState,
-    float4* imgPtr,
+    float4* trailMap,
     Agent* agents,
     unsigned int nAgents,
-    float speed,
-    float turnSpeed,
+    float speedDT,
+    float turnSpeedDT,
     float sensorAngleSpacing,
     float sensorOffsetDst,
     unsigned int sensorSize,
-    float trailDeltaW,
+    float trailWeightDT,
     unsigned int width,
     unsigned int heigth
 )
@@ -98,9 +98,9 @@ __global__ void k_updateAgents(
     Agent* agent = agents + agentIdx;
     
     // Sense and turn
-    float wf = sense(*agent,                 0.0, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
-    float wl = sense(*agent,  sensorAngleSpacing, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
-    float wr = sense(*agent, -sensorAngleSpacing, imgPtr, sensorOffsetDst, sensorSize, width, heigth);
+    float wf = sense(*agent,                 0.0, trailMap, sensorOffsetDst, sensorSize, width, heigth);
+    float wl = sense(*agent,  sensorAngleSpacing, trailMap, sensorOffsetDst, sensorSize, width, heigth);
+    float wr = sense(*agent, -sensorAngleSpacing, trailMap, sensorOffsetDst, sensorSize, width, heigth);
     
     float randomSteer = curand_uniform(randomState + threadIdx.x);
 
@@ -111,19 +111,19 @@ __global__ void k_updateAgents(
     }
     else if (wf < wl && wf < wr)
     {
-        agent->angle += (randomSteer - 0.5) * 2 * turnSpeed * deltaTime;
+        agent->angle += (randomSteer - 0.5) * 2 * turnSpeedDT;
     }
     else if (wr > wl) {
-        agent->angle -= randomSteer * turnSpeed * deltaTime;
+        agent->angle -= randomSteer * turnSpeedDT;
     }
     else if (wl > wr)
     {
-        agent->angle += randomSteer * turnSpeed * deltaTime;
+        agent->angle += randomSteer * turnSpeedDT;
     }
 
     // Update position
     float2 direction = make_float2(cosf(agent->angle), sinf(agent->angle));
-    float2 newPos = make_float2(deltaTime * speed * direction.x + agent->pos.x, deltaTime * speed * direction.y + agent->pos.y);
+    float2 newPos = make_float2(speedDT * direction.x + agent->pos.x, speedDT * direction.y + agent->pos.y);
 
     if (newPos.x < 0 || newPos.x >= width || newPos.y < 0 || newPos.y >= heigth)
     {
@@ -134,17 +134,18 @@ __global__ void k_updateAgents(
     else
     {
         int idx = __float2uint_rd(newPos.x) + __float2uint_rd(newPos.y) * width;
-        float4 value = imgPtr[idx];
-        value.x = min(1.0f, value.x + agent->speciesMask.x * trailDeltaW);
-        value.y = min(1.0f, value.y + agent->speciesMask.y * trailDeltaW);
-        value.z = min(1.0f, value.z + agent->speciesMask.z * trailDeltaW);
-        imgPtr[idx] = float4{value.x, value.y, value.z, value.w};
+        float4 value = trailMap[idx];
+        value.x = min(1.0f, value.x + agent->speciesMask.x * trailWeightDT);
+        value.y = min(1.0f, value.y + agent->speciesMask.y * trailWeightDT);
+        value.z = min(1.0f, value.z + agent->speciesMask.z * trailWeightDT);
+        value.w = min(1.0f, value.w + agent->speciesMask.w * trailWeightDT);
+        trailMap[idx] = make_float4(value.x, value.y, value.z, value.w);
     }
     
     agent->pos = newPos;
 }
 
-__device__ float sense(Agent a, float sensorAngleOffset, float4* imgPtr, float sensorOffsetDst, int sensorSize, unsigned int width, unsigned int heigth)
+__device__ float sense(Agent a, float sensorAngleOffset, float4* trailMap, float sensorOffsetDst, int sensorSize, unsigned int width, unsigned int heigth)
 {
     float sensorAngle = a.angle + sensorAngleOffset;
     float2 sensorDir = make_float2(cosf(sensorAngle), sinf(sensorAngle));
@@ -155,6 +156,7 @@ __device__ float sense(Agent a, float sensorAngleOffset, float4* imgPtr, float s
     int senseWeightX = a.speciesMask.x * 2 - 1;
     int senseWeightY = a.speciesMask.y * 2 - 1;
     int senseWeightZ = a.speciesMask.z * 2 - 1;
+    int senseWeightW = a.speciesMask.w * 2 - 1;
 
     for (int ox = -sensorSize; ox <= sensorSize; ox++)
     {
@@ -165,9 +167,11 @@ __device__ float sense(Agent a, float sensorAngleOffset, float4* imgPtr, float s
             if (pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < heigth)
             {
                 int idx = pos.x + pos.y * width;
-                sum += imgPtr[idx].x * senseWeightX
-                    + imgPtr[idx].y * senseWeightY
-                    + imgPtr[idx].z * senseWeightZ;
+                sum += 
+                      trailMap[idx].x * senseWeightX
+                    + trailMap[idx].y * senseWeightY
+                    + trailMap[idx].z * senseWeightZ
+                    + trailMap[idx].w * senseWeightW;
             }
         }
     }

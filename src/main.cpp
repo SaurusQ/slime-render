@@ -19,7 +19,7 @@
 #include <chrono>
 #include <thread>
 
-ImgConfig imgConfig
+SimConfig simConfig
 {
     AgentConfig
     {
@@ -91,7 +91,7 @@ void key_callback(GLFWwindow* wnd, int key, int scancode, int action, int mods)
     if (key == GLFW_KEY_M && action == GLFW_PRESS)
         showUI = !showUI;
     if (key == GLFW_KEY_C && action == GLFW_PRESS)
-        imgConfig.updateAgents = !imgConfig.updateAgents;
+        simConfig.updateAgents = !simConfig.updateAgents;
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
     {
         zoom = 1.0;
@@ -212,16 +212,16 @@ int main()
 #endif
 
     Image img{W_4K, H_4K};
-    Simulation imgGPU{img, 100};
-    GLuint texture = imgGPU.getTexture();
-    imgGPU.activateCuda();
+    Simulation simulation{img};
+    GLuint texture = simulation.getTexture();
+    simulation.activateCuda();
     img.setColor(RGBA{0.0f, 0.0f, 0.0f, 1.0f});
     //img.drawCircle(100, 1, 10, RGB{1.0, 0, 0});
     //img.randomize();
-    imgGPU.update(img);
-    imgGPU.deactivateCuda();
+    simulation.update(img);
+    simulation.deactivateCuda();
 
-    imgGPU.configAgentParameters(imgConfig.ac);
+    simulation.configAgentParameters(simConfig.ac);
 
     const unsigned int IMG_W = img.getWidth();
     const unsigned int IMG_H = img.getHeigth();
@@ -239,27 +239,27 @@ int main()
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (imgConfig.startFormation != StartFormation::CONFIGURED)
+        if (simConfig.startFormation != StartFormation::CONFIGURED)
         {
-            imgGPU.spawnAgents(imgConfig.numAgents, imgConfig.startFormation, imgConfig.clearOnSpawn);
-            imgConfig.startFormation = StartFormation::CONFIGURED;
+            simulation.spawnAgents(simConfig.numAgents, simConfig.startFormation, simConfig.clearOnSpawn);
+            simConfig.startFormation = StartFormation::CONFIGURED;
         }
-        imgGPU.updatePopulationSize(imgConfig.numAgents);
-        if (imgConfig.clearImg)
+        simulation.updatePopulationSize(simConfig.numAgents);
+        if (simConfig.clearImg)
         {
-            imgGPU.clearImage();
-            imgConfig.clearImg = false;
-        }
-
-        if (imgConfig.updateAgents)
-        {
-            imgGPU.activateCuda();
-            imgGPU.updateTrailMap(deltaTime, imgConfig.diffuse, imgConfig.evaporate);
-            imgGPU.updateAgents(deltaTime, imgConfig.trailWeight);
-            imgGPU.deactivateCuda();
+            simulation.clearImage();
+            simConfig.clearImg = false;
         }
 
-        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, imgGPU.getPbo());
+        if (simConfig.updateAgents)
+        {
+            simulation.activateCuda();
+            simulation.updateAgents(deltaTime, simConfig.trailWeight);
+            simulation.updateTrailMap(deltaTime, simConfig.diffuse, simConfig.evaporate);
+            simulation.deactivateCuda();
+        }
+
+        glBindBuffer(GL_PIXEL_UNPACK_BUFFER, simulation.getPbo());
 
         //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32F, width_, height_, 0, GL_RGB, GL_FLOAT, NULL);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, IMG_W, IMG_H, 0, GL_RGBA, GL_FLOAT, 0);
@@ -279,8 +279,8 @@ int main()
 #ifdef GUI
         if (showUI)
         {
-            configUI.update(window, imgConfig);
-            imgGPU.configAgentParameters(imgConfig.ac);
+            configUI.update(window, simConfig);
+            simulation.configAgentParameters(simConfig.ac);
         }
 #endif
 

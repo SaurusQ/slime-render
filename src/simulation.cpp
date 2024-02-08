@@ -30,24 +30,41 @@ unsigned int roundUpToPowerOfTwo(unsigned int x) {
     return x;
 }
 
-Simulation::Simulation(const Image& img, unsigned int padding)
-    : padding_(padding)
+Simulation::Simulation(const Image& img)
 {
     width_              = img.getWidth();
     height_             = img.getHeigth();
+    padding_            = 1;
     bufferSize_         = img.getBufferSize();
     bufferSizePadded_   = img.getPaddedBufferSize(padding_);
     padWidth_           = 2 * padding_ + width_;
 
     this->checkCudaError(
-        cudaMalloc((void**)&imgPadCudaArray_, bufferSizePadded_),
-        "cudaMalloc image padded"
+        cudaMalloc((void**)&trailMapFront_, bufferSizePadded_),
+        "cudaMalloc trailMapFront_"
+    );
+    this->checkCudaError(
+        cudaMalloc((void**)&trailMapBack_, bufferSizePadded_),
+        "cudaMalloc trailMapBack_"
+    );
+    this->checkCudaError(
+        cudaMalloc((void**)&resultCudaImg_, bufferSize_),
+        "cudaMalloc resultCudaImg_"
     );
 
     this->checkCudaError(
-        cudaMemset((void*)imgPadCudaArray_, 0, bufferSizePadded_),
-        "cudaMemset image padded"
+        cudaMemset((void*)trailMapFront_, 0, bufferSizePadded_),
+        "cudaMemset trailMapFront_"
     );
+    this->checkCudaError(
+        cudaMemset((void*)trailMapBack_, 0, bufferSizePadded_),
+        "cudaMemset trailMapBack_"
+    );
+    this->checkCudaError(
+        cudaMemset((void*)resultCudaImg_, 0, bufferSize_),
+        "cudaMemset resultCudaImg_"
+    );
+
     this->loadTexture();
     this->activateCuda();
     this->update(img);
@@ -56,7 +73,6 @@ Simulation::Simulation(const Image& img, unsigned int padding)
 
 Simulation::~Simulation()
 {
-    cudaFree((void*)imgPadCudaArray_);
     cudaGraphicsUnregisterResource(cudaPboResource_);
     glDeleteTextures(1, &texture_);
 
@@ -64,14 +80,9 @@ Simulation::~Simulation()
     {
         cudaFree(relativeIdxsGPUptr_);
     }
-    if (imgCudaArray_)
-    {
-        cudaFree(imgCudaArray_);
-    }
-    if (imgPadCudaArray_)
-    {
-        cudaFree(imgPadCudaArray_);
-    }
+    cudaFree(resultCudaImg_);
+    cudaFree(trailMapFront_);
+    cudaFree(trailMapBack_);
     if (agents_ != nullptr) cudaFree(agents_);
 }
 
@@ -87,7 +98,7 @@ void Simulation::activateCuda()
 
         size_t cudaPboSize;
         this->checkCudaError(
-            cudaGraphicsResourceGetMappedPointer((void**)&imgCudaArray_, &cudaPboSize, cudaPboResource_),
+            cudaGraphicsResourceGetMappedPointer((void**)&resultCudaImg_, &cudaPboSize, cudaPboResource_),
             "cudaGraphicsSubResourceGetMappedArray"
         );
 
@@ -116,7 +127,7 @@ void Simulation::update(const Image& img)
         return;
     }
     this->checkCudaError(
-        cudaMemcpy((void*)imgCudaArray_, (void*)img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
+        cudaMemcpy((void*)resultCudaImg_, (void*)img.getPtr(), bufferSize_, cudaMemcpyHostToDevice),
         "cudaMemcpy update()"
     );
     cudaDeviceSynchronize();
@@ -133,14 +144,16 @@ void Simulation::readBack(const Image& img) const
 
 void Simulation::clearImage()
 {
-    if (imgCudaArray_)
-    {
-        cudaMemset(imgCudaArray_, 0, bufferSize_);
-    }
-    if (imgPadCudaArray_)
-    {
-        cudaMemset(imgPadCudaArray_, 0, bufferSizePadded_);
-    }
+    cudaMemset(resultCudaImg_, 0, bufferSize_);
+    cudaMemset(trailMapFront_, 0, bufferSizePadded_);
+    cudaMemset(trailMapBack_,  0, bufferSizePadded_);
+}
+
+void Simulation::swapBuffers()
+{
+    auto temp = trailMapFront_;
+    trailMapFront_ = trailMapBack_;
+    trailMapBack_ = temp;
 }
 
 void Simulation::loadTexture()
@@ -191,7 +204,7 @@ void Simulation::imgToPadded()
 {
     REQUIRE_CUDA
     this->checkCudaError(
-        cudaMemcpy2D((void*)(imgPadCudaArray_ + padding_ + padWidth_ * padding_), padWidth_ * sizeof(RGBA), (void*)imgCudaArray_, width_ * sizeof(RGBA), width_ * sizeof(RGBA), height_, cudaMemcpyDeviceToDevice),
+        cudaMemcpy2D((void*)(trailMapFront_ + padding_ + padWidth_ * padding_), padWidth_ * sizeof(RGBA), (void*)resultCudaImg_, width_ * sizeof(RGBA), width_ * sizeof(RGBA), height_, cudaMemcpyDeviceToDevice),
         "cudaMemcpy imgToPadded()"
     );
 }
@@ -201,7 +214,7 @@ void Simulation::updateTrailMap(double deltaTime, float diffuseWeight, float eva
     REQUIRE_CUDA
     //unsigned int kernelValues = (kernelSize * 2 + 1) * (kernelSize * 2 + 1);
     //
-    this->imgToPadded();
+    this->swapBuffers();
 
     if (relativeIdxsGPUptr_ == nullptr)
     {
@@ -235,8 +248,16 @@ void Simulation::updateTrailMap(double deltaTime, float diffuseWeight, float eva
 
     dim3 grid(width_ / 32, height_ / 32);
     dim3 block(32, 32);
-    kl_updateTrailMap(grid, block, deltaTime, reinterpret_cast<float4*>(imgCudaArray_), reinterpret_cast<float4*>(imgPadCudaArray_), relativeIdxsGPUptr_, diffuseWeight * deltaTime, evaporateWeight * deltaTime, width_, padWidth_, padding_, padOffset);
-    this->checkCudaError(cudaGetLastError(), "kl_convolution");
+    kl_updateTrailMap(grid, block,
+        reinterpret_cast<float4*>(trailMapFront_),
+        reinterpret_cast<float4*>(trailMapBack_),
+        relativeIdxsGPUptr_,
+        diffuseWeight * deltaTime,
+        evaporateWeight * deltaTime,
+        padWidth_,
+        padOffset
+    );
+    this->checkCudaError(cudaGetLastError(), "kl_updateTrailMap");
 
     cudaDeviceSynchronize();
 }
@@ -288,7 +309,7 @@ void Simulation::spawnAgents(unsigned int num, StartFormation startFormation, bo
                 break;
             }
         }
-        ag.speciesMask = {1, 0, 0};
+        ag.speciesMask = {1, 0, 0, 0};
         ag.speciesIdx = 0;
         cpuAgents[i] = ag;
     }
@@ -369,9 +390,9 @@ void Simulation::updateAgents(double deltaTime, float trailWeight)
     REQUIRE_CUDA
     dim3 grid(std::ceil(nAgents_ / 32.0), 1);
     dim3 block(32, 1);
-    kl_updateAgents(grid, block, deltaTime, agentRandomState_, reinterpret_cast<float4*>(imgCudaArray_), agents_, nAgents_,
-        agentConfig_.speed,
-        agentConfig_.turnSpeed,
+    kl_updateAgents(grid, block, agentRandomState_, reinterpret_cast<float4*>(trailMapFront_), agents_, nAgents_,
+        agentConfig_.speed * deltaTime,
+        agentConfig_.turnSpeed * deltaTime,
         agentConfig_.sensorAngleSpacing,
         agentConfig_.sensorOffsetDst,
         agentConfig_.sensorSize,

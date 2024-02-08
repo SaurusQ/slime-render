@@ -20,7 +20,7 @@ UI::~UI()
     ImGui::DestroyContext();
 }
 
-void UI::update(GLFWwindow*wnd, ImgConfig& ic)
+void UI::update(GLFWwindow*wnd, SimConfig& ic)
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();

@@ -13,7 +13,7 @@ public:
     UI(GLFWwindow* wnd);
     ~UI();
 
-    void update(GLFWwindow* wnd, ImgConfig& ic);
+    void update(GLFWwindow* wnd, SimConfig& ic);
 private:
 
 };

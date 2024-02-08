@@ -14,7 +14,7 @@
 class Simulation
 {
 public:
-    Simulation(const Image& img, unsigned int padding);
+    Simulation(const Image& img);
     ~Simulation();
 
     void activateCuda();
@@ -23,6 +23,7 @@ public:
     void update(const Image& img);
     void readBack(const Image& img) const;
     void clearImage();
+    void swapBuffers();
 
     GLuint getTexture() const { return texture_; }
     GLuint getPbo() const { return pbo_; }
@@ -52,8 +53,9 @@ private:
     void imgToPadded();
 
     cudaGraphicsResource_t cudaPboResource_ = nullptr;
-    RGBA* imgCudaArray_ = nullptr;
-    RGBA* imgPadCudaArray_ = nullptr;
+    RGBA* resultCudaImg_ = nullptr;
+    RGBA* trailMapFront_ = nullptr;
+    RGBA* trailMapBack_ = nullptr;
     GLuint texture_ = 0;
     GLuint pbo_ = 0;
 
