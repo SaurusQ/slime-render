@@ -20,7 +20,7 @@ UI::~UI()
     ImGui::DestroyContext();
 }
 
-void UI::update(GLFWwindow*wnd, SimConfig& ic)
+void UI::update(GLFWwindow*wnd, SimConfig& sc, SimUpdate su)
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -30,51 +30,71 @@ void UI::update(GLFWwindow*wnd, SimConfig& ic)
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     ImGuiIO& io = ImGui::GetIO();
 
-    int sensorSize = ic.ac.sensorSize;
-
     {
         ImGui::Begin("Configuration");
         
         if (ImGui::CollapsingHeader("Agent config", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            ImGui::DragFloat("speed", &ic.ac.speed, 1, 0.0, 100.0);
-            ImGui::SliderFloat("turn speed", &ic.ac.turnSpeed, 0.0, 180.0);
-            ImGui::SliderFloat("sensor angle", &ic.ac.sensorAngleSpacing, 22.5, 45.0);
-            ImGui::SliderFloat("sensor offset", &ic.ac.sensorOffsetDst, 1.0, 50.0);
-            ImGui::SliderInt("sensor size", &sensorSize, 0, 10.0);
-
+            su.agentSettings |= ImGui::DragFloat("speed", &sc.ac.speed, 1, 0.0, 100.0);
+            su.agentSettings |= ImGui::SliderFloat("turn speed", &sc.ac.turnSpeed, 0.0, 180.0);
+            su.agentSettings |= ImGui::SliderFloat("sensor angle", &sc.ac.sensorAngleSpacing, 22.5, 45.0);
+            su.agentSettings |= ImGui::SliderFloat("sensor offset", &sc.ac.sensorOffsetDst, 1.0, 50.0);
+            su.agentSettings |= ImGui::SliderInt("sensor size", &sc.ac.sensorSize, 0, 10.0);
         }
-        ImGui::SliderFloat("evaporate", &ic.evaporate, 0.001, 1);
-        ImGui::SliderFloat("diffuse", &ic.diffuse, 0.0, 50.0);
-        ImGui::SliderFloat("Trail weight", &ic.trailWeight, 0.0, 100.0);
-        ImGui::SliderInt("Particles", &ic.numAgents, 1, 1000000);
 
-        if (ic.updateAgents)
+        if (ImGui::CollapsingHeader("Population config"), ImGuiTreeNodeFlags_DefaultOpen)
         {
-            if (ImGui::Button("Pause")) ic.updateAgents = false;
+            int idx = -1;
+            if(ImGui::SliderFloat("Red",       &sc.agentsShare[0], 0.0f, 1.0f)) idx = 0;
+            if(ImGui::SliderFloat("Green",     &sc.agentsShare[1], 0.0f, 1.0f)) idx = 1;
+            if(ImGui::SliderFloat("Blue",      &sc.agentsShare[2], 0.0f, 1.0f)) idx = 2;
+            if(ImGui::SliderFloat("Alpha",     &sc.agentsShare[3], 0.0f, 1.0f)) idx = 3;
+            if (idx != -1)
+            {
+                su.population = true;
+                this->balanceShare(sc.agentsShare[idx], sc.agentsShare[(idx + 1) % 4], sc.agentsShare[(idx + 2) % 4], sc.agentsShare[(idx + 3) % 4]);
+            }
+            su.population |= ImGui::SliderInt("Particles",   &sc.numAgents, 1, 1000000);
+        }
+
+        ImGui::SliderFloat("evaporate", &sc.evaporate, 0.001, 1);
+        ImGui::SliderFloat("diffuse", &sc.diffuse, 0.0, 50.0);
+        ImGui::SliderFloat("Trail weight", &sc.trailWeight, 0.0, 100.0);
+
+        if (sc.updateAgents)
+        {
+            if (ImGui::Button("Pause")) sc.updateAgents = false;
         }
         else
         {
-            if (ImGui::Button("Run")) ic.updateAgents = true;
+            if (ImGui::Button("Run")) sc.updateAgents = true;
         }
         ImGui::SameLine();
-        if(ImGui::Button("Clear")) ic.clearImg = true;
+        if(ImGui::Button("Clear")) su.clearImg = true;
         
         ImGui::Text("Reset Spawn");
-        if(ImGui::Button("Random")) ic.startFormation = StartFormation::RANDOM; 
+        if(ImGui::Button("Random")) { sc.startFormation = StartFormation::RANDOM; su.spawn; }
         ImGui::SameLine();
-        if(ImGui::Button("Middle")) ic.startFormation = StartFormation::MIDDLE;
+        if(ImGui::Button("Middle")) { sc.startFormation = StartFormation::MIDDLE; su.spawn; }
         ImGui::SameLine();
-        if(ImGui::Button("Circle")) ic.startFormation = StartFormation::CIRCLE;
+        if(ImGui::Button("Circle")) { sc.startFormation = StartFormation::CIRCLE; su.spawn; }
 
-        ImGui::Checkbox("Clear on spawn", &ic.clearOnSpawn);
+        ImGui::Checkbox("Clear on spawn", &sc.clearOnSpawn);
 
         ImGui::End();
     }
 
-    ic.ac.sensorSize = sensorSize;
-
     // Render UI
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void UI::balanceShare(float changed, float& a, float& b, float& c)
+{
+    float na, nb, nc;
+    float target = 1.0f - changed;
+    double total = a + b + c;
+    a = (a / total) * target;
+    b = (b / total) * target;
+    c = (c / total) * target;
 }

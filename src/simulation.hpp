@@ -31,8 +31,9 @@ public:
     // GPU mods
     void trailMapToResult();
     void updateTrailMap(double deltaTime, float diffuseWeight, float evaporateWeight);
-    void spawnAgents(unsigned int num, StartFormation startFormation, bool clear);
-    void updatePopulationSize(unsigned int num);
+    void spawnAgents(unsigned int newAgents, float* agentShares, StartFormation startFormation, bool clear);
+    void updatePopulationSize(unsigned int newAgents);
+    void updatePopulationShare(float* newPopulationShare)
     
     void configAgentParameters(AgentConfig ac) { 
         this->configAgentSpeed(ac.speed); 
@@ -82,6 +83,8 @@ private:
         0
     };
     curandState* agentRandomState_ = nullptr;
+    unsigned int agentShares_[4] = {1.0f, 0.0f, 0.0f, 0.0f};
+    unsigned int agentPopulations_[4] = {0, 0, 0, 0};
     unsigned int nAgents_ = 0;
     unsigned int nAgentsGpuSize_ = 0;
 };
