@@ -26,7 +26,7 @@ struct Agent
 {
     float2 pos;
     float angle;
-    int3 speciesMask;
+    int4 speciesMask;
     int speciesIdx;
 };
 
@@ -48,7 +48,7 @@ enum class StartFormation {
     CIRCLE
 };
 
-struct ImgConfig
+struct SimConfig
 {
     AgentConfig ac;
     int numAgents;

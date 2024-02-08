@@ -4,35 +4,28 @@
 #include <curand_kernel.h>
 
 void kl_updateTrailMap(dim3 grid, dim3 block,
-    double deltaTime,
-    float4* imgPtr,
-    float4* imgPadPtr,
+    float4* trailMapFront,
+    float4* trailMapBack,
     int* relativeIdxs,
     float diffuseDeltaW,
     float evaporateDeltaW,
-    unsigned int width,
     unsigned int padWidth,
-    unsigned int padding,
     unsigned int padOffset
 );
 
 __global__ void k_updateTrailMap(
-    double deltaTime,
-    float4* imgPtr,
-    float4* imgPadPtr,
+    float4* trailMapFront,
+    float4* trailMapBack,
     int* relativeIdxs,
     float diffuseDeltaW,
     float evaporateDeltaW,
-    unsigned int width,
     unsigned int padWidth,
-    unsigned int padding,
     unsigned int padOffset
 );
 
 void kl_updateAgents(dim3 grid, dim3 block,
-    double deltaTime,
     curandState* randomState,
-    float4* imgPtr,
+    float4* trailMap,
     Agent* agents,
     unsigned int nAgents,
     float speed,
@@ -46,9 +39,8 @@ void kl_updateAgents(dim3 grid, dim3 block,
 );
 
 __global__ void k_updateAgents(
-    double deltaTime,
     curandState* randomState,
-    float4* imgPtr,
+    float4* trailMap,
     Agent* agents,
     unsigned int nAgents,
     float speed,
@@ -64,7 +56,7 @@ __global__ void k_updateAgents(
 __device__ float sense(
     Agent a,
     float angleOffset,
-    float4* imgPtr,
+    float4* trailMap,
     float sensorOffSetDst,
     int sensorSize,
     unsigned int width,
