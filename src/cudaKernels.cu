@@ -72,10 +72,12 @@ void kl_updateAgents(dim3 grid, dim3 block,
     unsigned int sensorSize,
     float trailWeightDT,
     unsigned int width,
-    unsigned int heigth
+    unsigned int heigth,
+    unsigned int padWidth,
+    unsigned int padOffset
 )
 {
-    k_updateAgents<<<grid, block>>>(randomState, imgPtr, agents, nAgents, speedDT, turnSpeedDT, sensorAngleSpacing, sensorOffsetDst, sensorSize, trailWeightDT, width, heigth);
+    k_updateAgents<<<grid, block>>>(randomState, imgPtr, agents, nAgents, speedDT, turnSpeedDT, sensorAngleSpacing, sensorOffsetDst, sensorSize, trailWeightDT, width, heigth, padWidth, padOffset);
 }
 
 __global__ void k_updateAgents(
@@ -90,7 +92,9 @@ __global__ void k_updateAgents(
     unsigned int sensorSize,
     float trailWeightDT,
     unsigned int width,
-    unsigned int heigth
+    unsigned int heigth,
+    unsigned int padWidth,
+    unsigned int padOffset
 )
 {
     int agentIdx = blockIdx.x * 32 + threadIdx.x;
@@ -98,9 +102,9 @@ __global__ void k_updateAgents(
     Agent* agent = agents + agentIdx;
     
     // Sense and turn
-    float wf = sense(*agent,                 0.0, trailMap, sensorOffsetDst, sensorSize, width, heigth);
-    float wl = sense(*agent,  sensorAngleSpacing, trailMap, sensorOffsetDst, sensorSize, width, heigth);
-    float wr = sense(*agent, -sensorAngleSpacing, trailMap, sensorOffsetDst, sensorSize, width, heigth);
+    float wf = sense(*agent,                 0.0, trailMap, sensorOffsetDst, sensorSize, width, heigth, padWidth, padOffset);
+    float wl = sense(*agent,  sensorAngleSpacing, trailMap, sensorOffsetDst, sensorSize, width, heigth, padWidth, padOffset);
+    float wr = sense(*agent, -sensorAngleSpacing, trailMap, sensorOffsetDst, sensorSize, width, heigth, padWidth, padOffset);
     
     float randomSteer = curand_uniform(randomState + threadIdx.x);
 
@@ -133,19 +137,29 @@ __global__ void k_updateAgents(
     }
     else
     {
-        int idx = __float2uint_rd(newPos.x) + __float2uint_rd(newPos.y) * width;
-        float4 value = trailMap[idx];
+        int idxPad = padOffset + __float2uint_rd(newPos.x) + __float2uint_rd(newPos.y) * padWidth;
+        float4 value = trailMap[idxPad];
         value.x = min(1.0f, value.x + agent->speciesMask.x * trailWeightDT);
         value.y = min(1.0f, value.y + agent->speciesMask.y * trailWeightDT);
         value.z = min(1.0f, value.z + agent->speciesMask.z * trailWeightDT);
         value.w = min(1.0f, value.w + agent->speciesMask.w * trailWeightDT);
-        trailMap[idx] = make_float4(value.x, value.y, value.z, value.w);
+        trailMap[idxPad] = make_float4(value.x, value.y, value.z, value.w);
     }
     
     agent->pos = newPos;
 }
 
-__device__ float sense(Agent a, float sensorAngleOffset, float4* trailMap, float sensorOffsetDst, int sensorSize, unsigned int width, unsigned int heigth)
+__device__ float sense(
+    Agent a,
+    float sensorAngleOffset,
+    float4* trailMap,
+    float sensorOffsetDst,
+    int sensorSize,
+    unsigned int width,
+    unsigned int heigth,
+    unsigned int padWidth,
+    unsigned int padOffset
+)
 {
     float sensorAngle = a.angle + sensorAngleOffset;
     float2 sensorDir = make_float2(cosf(sensorAngle), sinf(sensorAngle));
@@ -166,12 +180,12 @@ __device__ float sense(Agent a, float sensorAngleOffset, float4* trailMap, float
 
             if (pos.x >= 0 && pos.x < width && pos.y >= 0 && pos.y < heigth)
             {
-                int idx = pos.x + pos.y * width;
+                int idxPad = padOffset + pos.x + pos.y * padWidth;
                 sum += 
-                      trailMap[idx].x * senseWeightX
-                    + trailMap[idx].y * senseWeightY
-                    + trailMap[idx].z * senseWeightZ
-                    + trailMap[idx].w * senseWeightW;
+                      trailMap[idxPad].x * senseWeightX
+                    + trailMap[idxPad].y * senseWeightY
+                    + trailMap[idxPad].z * senseWeightZ
+                    + trailMap[idxPad].w * senseWeightW;
             }
         }
     }

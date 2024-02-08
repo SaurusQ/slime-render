@@ -35,7 +35,9 @@ void kl_updateAgents(dim3 grid, dim3 block,
     unsigned int sensorSize,
     float trailDeltaW,
     unsigned int width,
-    unsigned int heigth
+    unsigned int heigth,
+    unsigned int padWidth,
+    unsigned int padOffset
 );
 
 __global__ void k_updateAgents(
@@ -50,7 +52,9 @@ __global__ void k_updateAgents(
     unsigned int sensorSize,
     float trailDeltaW,
     unsigned int width,
-    unsigned int heigth
+    unsigned int heigth,
+    unsigned int padWidth,
+    unsigned int padOffset
 );
 
 __device__ float sense(
@@ -60,7 +64,9 @@ __device__ float sense(
     float sensorOffSetDst,
     int sensorSize,
     unsigned int width,
-    unsigned int heigth
+    unsigned int heigth,
+    unsigned int padWidth,
+    unsigned int padOffset
 );
 
 void kl_initCurand32(dim3 grid, dim3 block,
