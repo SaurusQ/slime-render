@@ -20,7 +20,7 @@ UI::~UI()
     ImGui::DestroyContext();
 }
 
-void UI::update(GLFWwindow*wnd, SimConfig& sc, SimUpdate su)
+void UI::update(GLFWwindow*wnd, SimConfig& sc, SimUpdate& su)
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
@@ -39,20 +39,20 @@ void UI::update(GLFWwindow*wnd, SimConfig& sc, SimUpdate su)
             su.agentSettings |= ImGui::SliderFloat("turn speed", &sc.ac.turnSpeed, 0.0, 180.0);
             su.agentSettings |= ImGui::SliderFloat("sensor angle", &sc.ac.sensorAngleSpacing, 22.5, 45.0);
             su.agentSettings |= ImGui::SliderFloat("sensor offset", &sc.ac.sensorOffsetDst, 1.0, 50.0);
-            su.agentSettings |= ImGui::SliderInt("sensor size", &sc.ac.sensorSize, 0, 10.0);
+            su.agentSettings |= ImGui::SliderInt("sensor size", (int*)&sc.ac.sensorSize, 0, 10.0);
         }
 
         if (ImGui::CollapsingHeader("Population config"), ImGuiTreeNodeFlags_DefaultOpen)
         {
             int idx = -1;
-            if(ImGui::SliderFloat("Red",       &sc.agentsShare[0], 0.0f, 1.0f)) idx = 0;
-            if(ImGui::SliderFloat("Green",     &sc.agentsShare[1], 0.0f, 1.0f)) idx = 1;
-            if(ImGui::SliderFloat("Blue",      &sc.agentsShare[2], 0.0f, 1.0f)) idx = 2;
-            if(ImGui::SliderFloat("Alpha",     &sc.agentsShare[3], 0.0f, 1.0f)) idx = 3;
+            if(ImGui::SliderFloat("Red",       &sc.agentShare[0], 0.0f, 1.0f)) idx = 0;
+            if(ImGui::SliderFloat("Green",     &sc.agentShare[1], 0.0f, 1.0f)) idx = 1;
+            if(ImGui::SliderFloat("Blue",      &sc.agentShare[2], 0.0f, 1.0f)) idx = 2;
+            if(ImGui::SliderFloat("Alpha",     &sc.agentShare[3], 0.0f, 1.0f)) idx = 3;
             if (idx != -1)
             {
-                su.population = true;
-                this->balanceShare(sc.agentsShare[idx], sc.agentsShare[(idx + 1) % 4], sc.agentsShare[(idx + 2) % 4], sc.agentsShare[(idx + 3) % 4]);
+                su.populationShare = true;
+                this->balanceShare(sc.agentShare[idx], sc.agentShare[(idx + 1) % 4], sc.agentShare[(idx + 2) % 4], sc.agentShare[(idx + 3) % 4]);
             }
             su.population |= ImGui::SliderInt("Particles",   &sc.numAgents, 1, 1000000);
         }
@@ -73,11 +73,11 @@ void UI::update(GLFWwindow*wnd, SimConfig& sc, SimUpdate su)
         if(ImGui::Button("Clear")) su.clearImg = true;
         
         ImGui::Text("Reset Spawn");
-        if(ImGui::Button("Random")) { sc.startFormation = StartFormation::RANDOM; su.spawn; }
+        if(ImGui::Button("Random")) { sc.startFormation = StartFormation::RANDOM; su.spawn = true; }
         ImGui::SameLine();
-        if(ImGui::Button("Middle")) { sc.startFormation = StartFormation::MIDDLE; su.spawn; }
+        if(ImGui::Button("Middle")) { sc.startFormation = StartFormation::MIDDLE; su.spawn = true; }
         ImGui::SameLine();
-        if(ImGui::Button("Circle")) { sc.startFormation = StartFormation::CIRCLE; su.spawn; }
+        if(ImGui::Button("Circle")) { sc.startFormation = StartFormation::CIRCLE; su.spawn = true; }
 
         ImGui::Checkbox("Clear on spawn", &sc.clearOnSpawn);
 
@@ -93,7 +93,14 @@ void UI::balanceShare(float changed, float& a, float& b, float& c)
 {
     float na, nb, nc;
     float target = 1.0f - changed;
-    double total = a + b + c;
+    float total = a + b + c;
+    if (total == 0.0f)
+    {
+        a = 1.0f;
+        b = 1.0f;
+        c = 1.0f;
+        total = 3.0f;
+    }
     a = (a / total) * target;
     b = (b / total) * target;
     c = (c / total) * target;

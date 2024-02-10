@@ -230,7 +230,8 @@ int main()
     double lastTime = currentTime;
     double deltaTime;
 
-    SimUpdate simUpdate{false, false, false, false};
+    SimUpdate simUpdate{false, false, false, false, false};
+    simUpdate.spawn = true;
 
     while (!glfwWindowShouldClose(window))
     {
@@ -243,18 +244,28 @@ int main()
 
         if (simUpdate.spawn)
         {
-            simulation.spawnAgents(simConfig.agents, simConfig.startFormation, simConfig.clearOnSpawn);
+            std::cout << "spawn" << std::endl;
+            simulation.spawnAgents(simConfig.numAgents, simConfig.agentShare, simConfig.startFormation, simConfig.clearOnSpawn);
             simConfig.startFormation = StartFormation::CONFIGURED;
         }
-        else if (simUpdate.population)
+        else
         {
-            simulation.updatePopulationSize(simConfig.agents);
+            if (simUpdate.population)
+            {
+                std::cout << "population" << std::endl;
+                simulation.updatePopulationSize(simConfig.numAgents);
+            }
+            if (simUpdate.populationShare)
+            {
+                std::cout << "share" << std::endl;
+                simulation.updatePopulationShare(simConfig.agentShare);
+            }
         }
 
         if (simUpdate.clearImg)
         {
             simulation.clearImage();
-            simConfig.clearImg = false;
+            simUpdate.clearImg = false;
         }
 
         if (simConfig.updateAgents)
@@ -283,10 +294,11 @@ int main()
 
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
 
+        simUpdate = {false, false, false, false, false};
 #ifdef GUI
         if (showUI)
         {
-            configUI.update(window, simConfig);
+            configUI.update(window, simConfig, simUpdate);
             simulation.configAgentParameters(simConfig.ac);
         }
 #endif
@@ -294,6 +306,7 @@ int main()
         glfwSwapBuffers(window);
 
         glfwPollEvents();
+
     }
 
     glDeleteBuffers(1, &VBO);

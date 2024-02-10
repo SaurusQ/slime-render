@@ -33,7 +33,7 @@ public:
     void updateTrailMap(double deltaTime, float diffuseWeight, float evaporateWeight);
     void spawnAgents(unsigned int newAgents, float* agentShares, StartFormation startFormation, bool clear);
     void updatePopulationSize(unsigned int newAgents);
-    void updatePopulationShare(float* newPopulationShare)
+    void updatePopulationShare(float* newPopulationShare);
     
     void configAgentParameters(AgentConfig ac) { 
         this->configAgentSpeed(ac.speed); 
@@ -50,6 +50,8 @@ public:
 
     void updateAgents(double deltaTime, float trailWeight);
 private:
+    void updateSpecies();
+    std::vector<unsigned int> getPopulationCount() const;
     void loadTexture();
     bool checkCudaError(cudaError_t cs, std::string msg) const;
 
@@ -83,8 +85,7 @@ private:
         0
     };
     curandState* agentRandomState_ = nullptr;
-    unsigned int agentShares_[4] = {1.0f, 0.0f, 0.0f, 0.0f};
-    unsigned int agentPopulations_[4] = {0, 0, 0, 0};
+    float agentShares_[4] = {1.0f, 0.0f, 0.0f, 0.0f};
     unsigned int nAgents_ = 0;
     unsigned int nAgentsGpuSize_ = 0;
 };

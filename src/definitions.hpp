@@ -14,6 +14,9 @@ constexpr unsigned int H_4K = 1440;
 constexpr unsigned int W_4K = 320;
 constexpr unsigned int H_4K = 180;
 #endif
+
+#define SHARE_SIZE 4
+
 struct RGBA
 {
     float r;
@@ -51,7 +54,7 @@ enum class StartFormation {
 struct SimConfig
 {
     AgentConfig ac;
-    float agentShare[4];
+    float agentShare[SHARE_SIZE];
     int numAgents;
     float evaporate;
     float diffuse;
@@ -66,5 +69,6 @@ struct SimUpdate
     bool agentSettings;
     bool spawn;
     bool population;
+    bool populationShare;
     bool clearImg;
 };
