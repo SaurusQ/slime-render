@@ -78,6 +78,7 @@ Simulation::~Simulation()
     cudaFree(trailMapFront_);
     cudaFree(trailMapBack_);
     if (agents_ != nullptr) cudaFree(agents_);
+    if (agentRandomState_ != nullptr) cudaFree(agentRandomState_);
 }
 
 void Simulation::activateCuda()
@@ -257,12 +258,7 @@ void Simulation::updateTrailMap(double deltaTime, float diffuseWeight, float eva
 void Simulation::spawnAgents(unsigned int newAgents, float* agentShares, StartFormation startFormation, bool clear)
 {
     nAgents_ = newAgents;
-    unsigned int spawnableAgentPopulations[4];
-    for (int i = 0; i < 4; i++) 
-    {
-        agentPopulations_[i] = agentShares[i] * nAgents_;
-        spawnableAgentPopulations = agentPopulations_[i];
-    }
+
     if (agents_ != nullptr) cudaFree(agents_);
     nAgentsGpuSize_ = roundUpToPowerOfTwo(nAgents_);
     this->checkCudaError(
@@ -279,8 +275,6 @@ void Simulation::spawnAgents(unsigned int newAgents, float* agentShares, StartFo
 
     std::unique_ptr<Agent[]> cpuAgents = std::make_unique<Agent[]>(nAgents_);
     
-    int populationIdx = 0;
-
     for (int i = 0; i < nAgents_; i++)
     {
         Agent ag;
@@ -309,30 +303,25 @@ void Simulation::spawnAgents(unsigned int newAgents, float* agentShares, StartFo
                 break;
             }
         }
-
-        while (spawnableAgentPopulations[idx] == 0 && idx < 4) idx++;
-
-        spawnableAgentPopulations[idx]--;
-
-        ag.speciesMask = {idx == 0 ? 1 : 0, idx == 1 ? 1 : 0, idx == 2 ? 1 : 0, idx == 3 ? 1 : 0}
-        ag.speciesIdx = idx;
-
+        ag.speciesIdx = 0; // Set later
         cpuAgents[i] = ag;
     }
-    
+
     this-checkCudaError(
         cudaMemcpy(agents_, cpuAgents.get(), nAgents_ * sizeof(Agent), cudaMemcpyHostToDevice),
         "cudaMemcpy agent from cpu to gpu"
     );
 
-    
-    if (agentRandomState_ != nullptr) cudaFree(agentRandomState_);
+    this->updatePopulationShare(agentShares);
 
-    this->checkCudaError(
-        cudaMalloc(&agentRandomState_, 32 * sizeof(curandState)),
-        "cudaMalloc agentRandomState_"
-    );
-
+    // Init random state
+    if (agentRandomState_ == nullptr)
+    {
+        this->checkCudaError(
+            cudaMalloc(&agentRandomState_, 32 * sizeof(curandState)),
+            "cudaMalloc agentRandomState_"
+        );
+    }
     dim3 grid(1, 1);
     dim3 block(32, 1);
     kl_initCurand32(grid, block, agentRandomState_);
@@ -388,13 +377,24 @@ void Simulation::updatePopulationSize(unsigned int newAgents)
             );
         }
     }
+
     nAgents_ = newAgents;
+    this->updateSpecies();
     std::cout << "Final count: " << nAgents_ << std::endl;
 }
 
-void Simulation::updatePopulationShare(float* newPopulationShare)
+std::vector<unsigned int> Simulation::getPopulationCount() const
 {
-
+    std::vector<unsigned int> counts(SHARE_SIZE, 0);
+    unsigned int sum = 0;
+    for (int i = 0; i < SHARE_SIZE; i++)
+    {
+        counts[i] = nAgents_ * agentShares_[i];
+        sum += counts[i];
+    }
+    counts[0] += nAgents_ - sum; // Balance rounding errors
+    std::cout << "Balancing: " << nAgents_ - sum << std::endl;
+    return counts;
 }
 
 void Simulation::updateAgents(double deltaTime, float trailWeight)
@@ -417,4 +417,44 @@ void Simulation::updateAgents(double deltaTime, float trailWeight)
         height_,
         padWidth_,
         padOffset_);
+}
+
+void Simulation::updatePopulationShare(float* newPopulationShare)
+{
+    std::copy(newPopulationShare, newPopulationShare + SHARE_SIZE, agentShares_);
+    this->updateSpecies();
+}
+
+void Simulation::updateSpecies()
+{
+    std::unique_ptr<Agent[]> cpuAgents = std::make_unique<Agent[]>(nAgents_);
+    this->checkCudaError(
+        cudaMemcpy(cpuAgents.get(), agents_, sizeof(Agent) * nAgents_, cudaMemcpyDeviceToHost),
+        "Copying agents from GPU"
+    );
+    auto populationReserve = this->getPopulationCount();
+    // Set the species of the population
+    for (int idx = 0; idx < nAgents_; idx++)
+    {
+        Agent& ag = cpuAgents[idx];
+        if (populationReserve[ag.speciesIdx] == 0)
+        {
+            ag.speciesIdx = (ag.speciesIdx + 1) % SHARE_SIZE;
+            ag.speciesMask = {
+                ag.speciesIdx == 0 ? 1 : 0,
+                ag.speciesIdx == 1 ? 1 : 0,
+                ag.speciesIdx == 2 ? 1 : 0,
+                ag.speciesIdx == 3 ? 1 : 0
+            };
+            idx--;
+        }
+        else
+        {
+            populationReserve[ag.speciesIdx]--;
+        }
+    }
+    this->checkCudaError(
+        cudaMemcpy(agents_, cpuAgents.get(), sizeof(Agent) * nAgents_, cudaMemcpyHostToDevice),
+        "Copying agents to GPU"
+    );
 }
