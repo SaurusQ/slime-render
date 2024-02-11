@@ -107,6 +107,7 @@ __global__ void k_updateAgents(
     float wr = sense(*agent, -sensorAngleSpacing, trailMap, sensorOffsetDst, sensorSize, width, heigth, padWidth, padOffset);
     
     float randomSteer = curand_uniform(randomState + threadIdx.x);
+    //float randomSteer = curand_normal(randomState + threadIdx.x);
 
 
     if (wf > wl && wf > wr)

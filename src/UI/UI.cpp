@@ -36,7 +36,7 @@ void UI::update(GLFWwindow*wnd, SimConfig& sc, SimUpdate& su)
         if (ImGui::CollapsingHeader("Agent config", ImGuiTreeNodeFlags_DefaultOpen))
         {
             su.agentSettings |= ImGui::DragFloat("speed", &sc.ac.speed, 1, 0.0, 100.0);
-            su.agentSettings |= ImGui::SliderFloat("turn speed", &sc.ac.turnSpeed, 0.0, 180.0);
+            su.agentSettings |= ImGui::SliderFloat("turn speed", &sc.ac.turnSpeed, 0.0, 1000.0);
             su.agentSettings |= ImGui::SliderFloat("sensor angle", &sc.ac.sensorAngleSpacing, 22.5, 45.0);
             su.agentSettings |= ImGui::SliderFloat("sensor offset", &sc.ac.sensorOffsetDst, 1.0, 50.0);
             su.agentSettings |= ImGui::SliderInt("sensor size", (int*)&sc.ac.sensorSize, 0, 10.0);
