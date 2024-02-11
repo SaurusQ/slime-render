@@ -244,7 +244,6 @@ int main()
 
         if (simUpdate.spawn)
         {
-            std::cout << "spawn" << std::endl;
             simulation.spawnAgents(simConfig.numAgents, simConfig.agentShare, simConfig.startFormation, simConfig.clearOnSpawn);
             simConfig.startFormation = StartFormation::CONFIGURED;
         }
@@ -252,12 +251,10 @@ int main()
         {
             if (simUpdate.population)
             {
-                std::cout << "population" << std::endl;
                 simulation.updatePopulationSize(simConfig.numAgents);
             }
             if (simUpdate.populationShare)
             {
-                std::cout << "share" << std::endl;
                 simulation.updatePopulationShare(simConfig.agentShare);
             }
         }
