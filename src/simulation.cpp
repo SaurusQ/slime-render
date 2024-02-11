@@ -393,7 +393,6 @@ std::vector<unsigned int> Simulation::getPopulationCount() const
         sum += counts[i];
     }
     counts[0] += nAgents_ - sum; // Balance rounding errors
-    std::cout << "Balancing: " << nAgents_ - sum << std::endl;
     return counts;
 }
 
