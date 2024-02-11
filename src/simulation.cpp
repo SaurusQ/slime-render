@@ -303,7 +303,7 @@ void Simulation::spawnAgents(unsigned int newAgents, float* agentShares, StartFo
                 break;
             }
         }
-        ag.speciesIdx = 0; // Set later
+        ag.speciesIdx = -1; // Set later
         cpuAgents[i] = ag;
     }
 
