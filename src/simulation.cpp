@@ -289,6 +289,14 @@ void Simulation::spawnAgents(unsigned int newAgents, float* agentShares, StartFo
                 ag.angle = std::atan2((height_ / 2.0f) - ag.pos.y, (width_ / 2.0f) - ag.pos.x);
                 break;
             }
+            case StartFormation::RANDOM_CIRCLE:
+            {
+                float r = (std::min(width_, height_) / 2.0f) * 0.9f * randn(rng);
+                float a = dist2pi(rng);
+                ag.pos = float2{width_ / 2.0f + static_cast<float>(r * std::cos(a)), height_ / 2.0f + static_cast<float>(r * std::sin(a))};
+                ag.angle = (randn(rng) * 2 * M_PI) - M_PI;
+                break;
+            }
             case StartFormation::MIDDLE:
             {
                 ag.pos = float2{width_ / 2.0f, height_ / 2.0f};

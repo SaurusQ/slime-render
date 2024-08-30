@@ -48,7 +48,8 @@ enum class StartFormation {
     CONFIGURED,
     RANDOM,
     MIDDLE,
-    CIRCLE
+    CIRCLE,
+    RANDOM_CIRCLE
 };
 
 struct SimConfig

@@ -42,7 +42,7 @@ void UI::update(GLFWwindow*wnd, SimConfig& sc, SimUpdate& su)
             su.agentSettings |= ImGui::SliderInt("sensor size", (int*)&sc.ac.sensorSize, 0, 10.0);
         }
 
-        if (ImGui::CollapsingHeader("Population config"), ImGuiTreeNodeFlags_DefaultOpen)
+        if (ImGui::CollapsingHeader("Population config", ImGuiTreeNodeFlags_DefaultOpen))
         {
             int idx = -1;
             if(ImGui::SliderFloat("Red",       &sc.agentShare[0], 0.0f, 1.0f)) idx = 0;
@@ -57,10 +57,12 @@ void UI::update(GLFWwindow*wnd, SimConfig& sc, SimUpdate& su)
             su.population |= ImGui::SliderInt("Particles",   &sc.numAgents, 1, 1000000);
         }
 
-        ImGui::SliderFloat("evaporate", &sc.evaporate, 0.001, 1);
-        ImGui::SliderFloat("diffuse", &sc.diffuse, 0.0, 50.0);
-        ImGui::SliderFloat("Trail weight", &sc.trailWeight, 0.0, 100.0);
-
+        if (ImGui::CollapsingHeader("Trail config", ImGuiTreeNodeFlags_DefaultOpen))
+        {
+            ImGui::SliderFloat("evaporate", &sc.evaporate, 0.001, 1);
+            ImGui::SliderFloat("diffuse", &sc.diffuse, 0.0, 50.0);
+            ImGui::SliderFloat("Trail weight", &sc.trailWeight, 0.0, 100.0);
+        }
         if (sc.updateAgents)
         {
             if (ImGui::Button("Pause")) sc.updateAgents = false;
@@ -78,6 +80,8 @@ void UI::update(GLFWwindow*wnd, SimConfig& sc, SimUpdate& su)
         if(ImGui::Button("Middle")) { sc.startFormation = StartFormation::MIDDLE; su.spawn = true; }
         ImGui::SameLine();
         if(ImGui::Button("Circle")) { sc.startFormation = StartFormation::CIRCLE; su.spawn = true; }
+        ImGui::SameLine();
+        if(ImGui::Button("RCircle")) { sc.startFormation = StartFormation::RANDOM_CIRCLE; su.spawn = true; }
 
         ImGui::Checkbox("Clear on spawn", &sc.clearOnSpawn);
 
