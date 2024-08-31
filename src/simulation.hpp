@@ -29,13 +29,13 @@ public:
     GLuint getPbo() const { return pbo_; }
 
     // GPU mods
-    void trailMapToResult();
+    void trailMapToDisplay();
     void updateTrailMap(double deltaTime, float diffuseWeight, float evaporateWeight);
     void spawnAgents(unsigned int newAgents, float* agentShares, StartFormation startFormation, bool clear);
     void updatePopulationSize(unsigned int newAgents);
     void updatePopulationShare(float* newPopulationShare);
     
-    void configAgentParameters(AgentConfig* aConfigs, AgentColors* aColors);
+    void configAgentParameters(AgentConfig* aConfigs, AgentColor* aColors);
     void configAgentSpeed(int idx, float speed) { agentConfig_[idx].speed = speed; }
     void configAgentTurnSpeed(int idx, float turnSpeed) { agentConfig_[idx].turnSpeed = turnSpeed * (M_PI / 180.0); }
     void configAgentSensorAngleSpacing(int idx, float sensorAngleSpacing) { agentConfig_[idx].sensorAngleSpacing = sensorAngleSpacing * (M_PI / 180.0); }

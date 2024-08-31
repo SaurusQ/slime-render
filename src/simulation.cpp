@@ -203,12 +203,23 @@ bool Simulation::checkCudaError(cudaError_t ce, std::string msg) const
     return failure;
 }
 
-void Simulation::trailMapToResult()
+void Simulation::trailMapToDisplay()
 {
     REQUIRE_CUDA
-    this->checkCudaError(
+    /*this->checkCudaError(
         cudaMemcpy2D((void*)resultCudaImg_, width_ * sizeof(RGBA), (void*)(trailMapFront_ + padOffset_), padWidth_ * sizeof(RGBA), width_ * sizeof(RGBA), height_, cudaMemcpyDeviceToDevice),
-        "cudaMemcpy trailMapToResult()"
+        "cudaMemcpy trailMapToDisplay()"
+    );*/
+    dim3 grid(width_ / 32, height_ / 32);
+    dim3 block(32, 32);
+    kl_trailMapToDisplay(grid, block,
+        reinterpret_cast<float4*>(trailMapFront_),
+        reinterpret_cast<float4*>(resultCudaImg_),
+        reinterpret_cast<float3*>(agentColorsGPU_),
+        width_,
+        height_,
+        padWidth_,
+        padOffset_
     );
 }
 
@@ -399,7 +410,7 @@ void Simulation::updatePopulationSize(unsigned int newAgents)
     std::cout << "Final count: " << nAgents_ << std::endl;
 }
 
-void Simulation::configAgentParameters(AgentConfig* aConfigs, AgentColors* aColors) {
+void Simulation::configAgentParameters(AgentConfig* aConfigs, AgentColor* aColors) {
     std::copy(aColors, aColors + DIFFERENT_SPECIES, agentColors_);
     for (int i = 0; i < DIFFERENT_SPECIES; i++)
     {
@@ -437,7 +448,7 @@ void Simulation::updateAgentConfig()
     if (agentColorsGPU_ == nullptr)
     {
         this->checkCudaError(
-            cudaMalloc((void**)&agentColorsGPU_, sizeof(AgentColors) * DIFFERENT_SPECIES),
+            cudaMalloc((void**)&agentColorsGPU_, sizeof(AgentColor) * DIFFERENT_SPECIES),
             "cudaMalloc for agentColorsGPU_ failed"
         );
     }
@@ -447,7 +458,7 @@ void Simulation::updateAgentConfig()
         "cudaMemcpy agentConfigGPU_ failed" 
     );
     this->checkCudaError(
-        cudaMemcpy(agentColorsGPU_, agentColors_, sizeof(AgentColors) * DIFFERENT_SPECIES, cudaMemcpyHostToDevice),
+        cudaMemcpy(agentColorsGPU_, agentColors_, sizeof(AgentColor) * DIFFERENT_SPECIES, cudaMemcpyHostToDevice),
         "cudaMemcpy agentColorsGPU_ failed" 
     );
 }

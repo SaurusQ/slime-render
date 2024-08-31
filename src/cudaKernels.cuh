@@ -63,6 +63,26 @@ __device__ float sense(
     unsigned int padOffset
 );
 
+void kl_trailMapToDisplay(dim3 grid, dim3 block,
+    float4* trailMap,
+    float4* displayTexture,
+    float3* colors,
+    unsigned int width,
+    unsigned int heigth,
+    unsigned int padWidth,
+    unsigned int padOffset
+);
+
+__global__ void k_trailMapToDisplay(
+    float4* trailMap,
+    float4* displayTexture,
+    float3* colors,
+    unsigned int width,
+    unsigned int heigth,
+    unsigned int padWidth,
+    unsigned int padOffset
+);
+
 void kl_initCurand32(dim3 grid, dim3 block,
     curandState* state
 );

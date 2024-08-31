@@ -27,7 +27,7 @@ struct RGBA
     float a;
 };
 
-struct AgentColors
+struct AgentColor
 {
     float r;
     float g;
@@ -53,8 +53,8 @@ struct AgentConfig
 
 typedef AgentConfig AgentConfig_I;
 typedef AgentConfig AgentConfig_GPU;
-typedef AgentColors AgentColors_I;
-typedef AgentColors AgentColors_GPU;
+typedef AgentColor AgentColors_I;
+typedef AgentColor AgentColors_GPU;
 
 enum class StartFormation {
     CONFIGURED,
@@ -67,7 +67,7 @@ enum class StartFormation {
 struct SimConfig
 {
     AgentConfig aConfigs[DIFFERENT_SPECIES];
-    AgentColors aColors[DIFFERENT_SPECIES];
+    AgentColor aColors[DIFFERENT_SPECIES];
     float agentShare[DIFFERENT_SPECIES];
     int numAgents;
     float evaporate;

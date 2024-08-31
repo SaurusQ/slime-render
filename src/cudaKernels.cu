@@ -104,6 +104,7 @@ __global__ void k_updateAgents(
     
     float randomSteer = curand_uniform(randomState + threadIdx.x);
     //float randomSteer = curand_normal(randomState + threadIdx.x);
+    //float randomStree = 0.0001f;
 
 
     if (wf > wl && wf > wr)
@@ -187,6 +188,44 @@ __device__ float sense(
         }
     }
     return sum;
+}
+
+void kl_trailMapToDisplay(dim3 grid, dim3 block,
+    float4* trailMap,
+    float4* displayTexture,
+    float3* colors,
+    unsigned int width,
+    unsigned int heigth,
+    unsigned int padWidth,
+    unsigned int padOffset
+)
+{
+    k_trailMapToDisplay<<<grid, block>>>(trailMap, displayTexture, colors, width, heigth, padWidth, padOffset);
+}
+
+__global__ void k_trailMapToDisplay(
+    float4* trailMap,
+    float4* displayTexture,
+    float3* colors,
+    unsigned int width,
+    unsigned int heigth,
+    unsigned int padWidth,
+    unsigned int padOffset
+)
+{
+    int x = blockIdx.x * 32 + threadIdx.x;
+    int y = blockIdx.y * 32 + threadIdx.y;
+
+    if (x >= width || y >= heigth) return;
+
+    float4 tm = trailMap[padOffset + y * padWidth + x];
+
+    // DIFFERENT_SPECIES
+    float r = colors[0].x * tm.x + colors[1].x * tm.y + colors[2].x * tm.z + colors[3].x * tm.w;
+    float g = colors[0].y * tm.x + colors[1].y * tm.y + colors[2].y * tm.z + colors[3].y * tm.w;
+    float b = colors[0].z * tm.x + colors[1].z * tm.y + colors[2].z * tm.z + colors[3].z * tm.w;
+    
+    displayTexture[y * width + x] = make_float4(r, g, b, 1.0f);
 }
 
 void kl_initCurand32(dim3 grid, dim3 block,

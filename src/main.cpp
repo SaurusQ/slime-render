@@ -264,7 +264,7 @@ int main()
             }
             simulation.updateAgents(deltaTime, simConfig.trailWeight);
             simulation.updateTrailMap(deltaTime, simConfig.diffuse, simConfig.evaporate);
-            simulation.trailMapToResult();
+            simulation.trailMapToDisplay();
             simulation.deactivateCuda();
         }
 
