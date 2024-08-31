@@ -254,19 +254,19 @@ int main()
             simUpdate.clearImg = false;
         }
 
+        simulation.activateCuda();
+        if (simUpdate.agentSettings)
+        {
+            simulation.configAgentParameters(simConfig.aConfigs, simConfig.aColors);
+            simulation.updateAgentConfig();
+        }
         if (simConfig.updateAgents)
         {
-            simulation.activateCuda();
-            if (simUpdate.agentSettings)
-            {
-                simulation.configAgentParameters(simConfig.aConfigs, simConfig.aColors);
-                simulation.updateAgentConfig();
-            }
             simulation.updateAgents(deltaTime, simConfig.trailWeight);
             simulation.updateTrailMap(deltaTime, simConfig.diffuse, simConfig.evaporate);
             simulation.trailMapToDisplay();
-            simulation.deactivateCuda();
         }
+        simulation.deactivateCuda();
 
         glBindBuffer(GL_PIXEL_UNPACK_BUFFER, simulation.getPbo());
 

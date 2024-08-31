@@ -221,9 +221,9 @@ __global__ void k_trailMapToDisplay(
     float4 tm = trailMap[padOffset + y * padWidth + x];
 
     // DIFFERENT_SPECIES
-    float r = colors[0].x * tm.x + colors[1].x * tm.y + colors[2].x * tm.z + colors[3].x * tm.w;
-    float g = colors[0].y * tm.x + colors[1].y * tm.y + colors[2].y * tm.z + colors[3].y * tm.w;
-    float b = colors[0].z * tm.x + colors[1].z * tm.y + colors[2].z * tm.z + colors[3].z * tm.w;
+    float r = min(1.0f, colors[0].x * tm.x + colors[1].x * tm.y + colors[2].x * tm.z + colors[3].x * tm.w);
+    float g = min(1.0f, colors[0].y * tm.x + colors[1].y * tm.y + colors[2].y * tm.z + colors[3].y * tm.w);
+    float b = min(1.0f, colors[0].z * tm.x + colors[1].z * tm.y + colors[2].z * tm.z + colors[3].z * tm.w);
     
     displayTexture[y * width + x] = make_float4(r, g, b, 1.0f);
 }
