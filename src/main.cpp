@@ -19,25 +19,7 @@
 #include <chrono>
 #include <thread>
 
-SimConfig simConfig
-{
-    AgentConfig
-    {
-        60.0,       // speed
-        90.0,       // turnspeed
-        30.0,
-        9.0,
-        0
-    },
-    {1.0f, 0.0f, 0.0f, 0.0f},
-    1000,           // num agents
-    0.2,            // evaporate        0.027
-    10.0,           // diffuse          50
-    20.0f,          // trail weight
-    false, // update agents
-    true,  // clear on spawn
-    StartFormation::MIDDLE
-};
+SimConfig simConfig;
 
 bool showUI = false;
 bool dragMouse = false;
@@ -102,7 +84,10 @@ void key_callback(GLFWwindow* wnd, int key, int scancode, int action, int mods)
 
 void scroll_callback(GLFWwindow* wnd, double xoffset, double yoffset)
 {
-    zoom = std::max(0.01, zoom + yoffset * 0.04 * zoom);
+    if (!showUI)
+    {
+        zoom = std::max(0.01, zoom + yoffset * 0.04 * zoom);
+    }
 }
 
 void mouseButton_callback(GLFWwindow* wnd, int button, int action, int mods)
@@ -153,6 +138,7 @@ void fpsHandler(double cur, GLFWwindow* window)
 
 int main()
 {
+    simConfig.numAgents = 10000;
     GLFWwindow* window;
 
     /* Initialize the library */
@@ -221,7 +207,10 @@ int main()
     simulation.update(img);
     simulation.deactivateCuda();
 
-    simulation.configAgentParameters(simConfig.ac);
+    simulation.configAgentParameters(simConfig.aConfigs, simConfig.aColors);
+    simulation.activateCuda();
+    simulation.updateAgentConfig();
+    simulation.deactivateCuda();
 
     const unsigned int IMG_W = img.getWidth();
     const unsigned int IMG_H = img.getHeigth();
@@ -268,6 +257,11 @@ int main()
         if (simConfig.updateAgents)
         {
             simulation.activateCuda();
+            if (simUpdate.agentSettings)
+            {
+                simulation.configAgentParameters(simConfig.aConfigs, simConfig.aColors);
+                simulation.updateAgentConfig();
+            }
             simulation.updateAgents(deltaTime, simConfig.trailWeight);
             simulation.updateTrailMap(deltaTime, simConfig.diffuse, simConfig.evaporate);
             simulation.trailMapToResult();
@@ -296,7 +290,6 @@ int main()
         if (showUI)
         {
             configUI.update(window, simConfig, simUpdate);
-            simulation.configAgentParameters(simConfig.ac);
         }
 #endif
 

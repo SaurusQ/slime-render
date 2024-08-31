@@ -1,5 +1,7 @@
 #include "UI.hpp"
 
+#include "string"
+
 UI::UI(GLFWwindow* wnd)
 {
     IMGUI_CHECKVERSION();
@@ -33,13 +35,29 @@ void UI::update(GLFWwindow*wnd, SimConfig& sc, SimUpdate& su)
     {
         ImGui::Begin("Configuration");
         
-        if (ImGui::CollapsingHeader("Agent config", ImGuiTreeNodeFlags_DefaultOpen))
+        if(ImGui::CollapsingHeader("Agent config", ImGuiTreeNodeFlags_DefaultOpen))
         {
-            su.agentSettings |= ImGui::DragFloat("speed", &sc.ac.speed, 1, 0.0, 100.0);
-            su.agentSettings |= ImGui::SliderFloat("turn speed", &sc.ac.turnSpeed, 0.0, 1000.0);
-            su.agentSettings |= ImGui::SliderFloat("sensor angle", &sc.ac.sensorAngleSpacing, 22.5, 45.0);
-            su.agentSettings |= ImGui::SliderFloat("sensor offset", &sc.ac.sensorOffsetDst, 1.0, 50.0);
-            su.agentSettings |= ImGui::SliderInt("sensor size", (int*)&sc.ac.sensorSize, 0, 10.0);
+            for (int i = 0; i < DIFFERENT_SPECIES; i++)
+            {
+                std::string headerLabel = "Agent config: " + std::string(agentNames[i]);
+                if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+                {
+                    su.agentSettings |= ImGui::DragFloat  ((std::string(agentNames[i]) + " speed").c_str(),          &sc.aConfigs[i].speed, 1, 0.0, 100.0);
+                    su.agentSettings |= ImGui::SliderFloat((std::string(agentNames[i]) + " turn speed").c_str(),     &sc.aConfigs[i].turnSpeed, 0.0, 1000.0);
+                    su.agentSettings |= ImGui::SliderFloat((std::string(agentNames[i]) + " sensor angle").c_str(),   &sc.aConfigs[i].sensorAngleSpacing, 22.5, 45.0);
+                    su.agentSettings |= ImGui::SliderFloat((std::string(agentNames[i]) + " sensor offset").c_str(),  &sc.aConfigs[i].sensorOffsetDst, 1.0, 50.0);
+                    su.agentSettings |= ImGui::SliderInt  ((std::string(agentNames[i]) + " sensor size").c_str(),    (int*)&sc.aConfigs[i].sensorSize, 0, 10.0);
+                }
+            }
+            if (ImGui::CollapsingHeader("Agent colors", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                for (int i = 0; i < DIFFERENT_SPECIES; i++)
+                {
+                        su.agentSettings |= ImGui::SliderFloat((std::string(agentNames[i]) + " Red  ").c_str(), &sc.aColors[i].r, 0.0, 1.0);
+                        su.agentSettings |= ImGui::SliderFloat((std::string(agentNames[i]) + " Green").c_str(), &sc.aColors[i].g, 0.0, 1.0);
+                        su.agentSettings |= ImGui::SliderFloat((std::string(agentNames[i]) + " Blue ").c_str(), &sc.aColors[i].b, 0.0, 1.0);
+                }
+            }
         }
 
         if (ImGui::CollapsingHeader("Population config", ImGuiTreeNodeFlags_DefaultOpen))

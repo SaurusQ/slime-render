@@ -74,6 +74,14 @@ Simulation::~Simulation()
     {
         cudaFree(relativeIdxsGPUptr_);
     }
+    if (agentConfigGPU_ != nullptr)
+    {
+        cudaFree(relativeIdxsGPUptr_);
+    }
+    if (agentColorsGPU_ != nullptr)
+    {
+        cudaFree(relativeIdxsGPUptr_);
+    }
     cudaFree(resultCudaImg_);
     cudaFree(trailMapFront_);
     cudaFree(trailMapBack_);
@@ -341,9 +349,9 @@ void Simulation::updatePopulationSize(unsigned int newAgents)
 
     if (nAgentsGpuSize_ < newAgents || nAgentsGpuSize_ > roundUpToPowerOfTwo(newAgents)) {
         
-        std::cout << "round p2: " << newAgents << " | " << roundUpToPowerOfTwo(newAgents) << std::endl;
+        //std::cout << "round p2: " << newAgents << " | " << roundUpToPowerOfTwo(newAgents) << std::endl;
         unsigned int newArraySize = roundUpToPowerOfTwo(newAgents);
-        std::cout << "Resizing array " << nAgents_ << " -> " << newArraySize << std::endl; 
+        //std::cout << "Resizing array " << nAgents_ << " -> " << newArraySize << std::endl; 
         Agent* newArray;
         this->checkCudaError(
             cudaMalloc((void**)&newArray, newArraySize * sizeof(Agent)),
@@ -364,7 +372,7 @@ void Simulation::updatePopulationSize(unsigned int newAgents)
         while (newAgents - nAgents_ > nAgents_) // Added too many agents to make unique copies
         {
             unsigned int newAgents = newAgents - nAgents_;
-            std::cout << "adding copying new agents " << newAgents << std::endl;
+            //std::cout << "adding copying new agents " << newAgents << std::endl;
             this->checkCudaError(
                 cudaMemcpy(agents_ + nAgents_, agents_, nAgents_ * sizeof(Agent), cudaMemcpyDeviceToDevice),
                 "cudaMemcpy copy whole array of agents to the end of itself from gpu to gpu"
@@ -377,7 +385,7 @@ void Simulation::updatePopulationSize(unsigned int newAgents)
             std::mt19937 gen(rd());
             std::uniform_int_distribution<int> dist(0, nAgents_ - 1 - (newAgents - nAgents_));
             unsigned int idx = dist(gen);
-            std::cout << "copyging random part from the gpu" << " dist: " << idx << std::endl;
+            //std::cout << "copyging random part from the gpu" << " dist: " << idx << std::endl;
             if (idx + (newAgents - nAgents_) > nAgents_) std::cout << "FAILURE IN IDX ########" << std::endl;
             this->checkCudaError(
                 cudaMemcpy(agents_ + nAgents_, agents_ + idx, (newAgents - nAgents_) * sizeof(Agent), cudaMemcpyDeviceToDevice),
@@ -391,11 +399,23 @@ void Simulation::updatePopulationSize(unsigned int newAgents)
     std::cout << "Final count: " << nAgents_ << std::endl;
 }
 
+void Simulation::configAgentParameters(AgentConfig* aConfigs, AgentColors* aColors) {
+    std::copy(aColors, aColors + DIFFERENT_SPECIES, agentColors_);
+    for (int i = 0; i < DIFFERENT_SPECIES; i++)
+    {
+        this->configAgentSpeed(i, aConfigs[i].speed); 
+        this->configAgentTurnSpeed(i, aConfigs[i].turnSpeed); 
+        this->configAgentSensorAngleSpacing(i, aConfigs[i].sensorAngleSpacing); 
+        this->configAgentSensorOffsetDst(i, aConfigs[i].sensorOffsetDst);
+        this->configAgentSensorSize(i, aConfigs[i].sensorSize);
+    }
+}
+
 std::vector<unsigned int> Simulation::getPopulationCount() const
 {
-    std::vector<unsigned int> counts(SHARE_SIZE, 0);
+    std::vector<unsigned int> counts(DIFFERENT_SPECIES, 0);
     unsigned int sum = 0;
-    for (int i = 0; i < SHARE_SIZE; i++)
+    for (int i = 0; i < DIFFERENT_SPECIES; i++)
     {
         counts[i] = nAgents_ * agentShares_[i];
         sum += counts[i];
@@ -404,21 +424,46 @@ std::vector<unsigned int> Simulation::getPopulationCount() const
     return counts;
 }
 
+void Simulation::updateAgentConfig()
+{
+    REQUIRE_CUDA
+    if (agentConfigGPU_ == nullptr)
+    {
+        this->checkCudaError(
+            cudaMalloc((void**)&agentConfigGPU_, sizeof(AgentConfig_GPU) * DIFFERENT_SPECIES),
+            "cudaMalloc for agentConfigGPU_ failed"
+        );
+    }
+    if (agentColorsGPU_ == nullptr)
+    {
+        this->checkCudaError(
+            cudaMalloc((void**)&agentColorsGPU_, sizeof(AgentColors) * DIFFERENT_SPECIES),
+            "cudaMalloc for agentColorsGPU_ failed"
+        );
+    }
+
+    this->checkCudaError(
+        cudaMemcpy(agentConfigGPU_, agentConfig_, sizeof(AgentConfig_I) * DIFFERENT_SPECIES, cudaMemcpyHostToDevice),
+        "cudaMemcpy agentConfigGPU_ failed" 
+    );
+    this->checkCudaError(
+        cudaMemcpy(agentColorsGPU_, agentColors_, sizeof(AgentColors) * DIFFERENT_SPECIES, cudaMemcpyHostToDevice),
+        "cudaMemcpy agentColorsGPU_ failed" 
+    );
+}
+
 void Simulation::updateAgents(double deltaTime, float trailWeight)
 {
     REQUIRE_CUDA
     dim3 grid(std::ceil(nAgents_ / 32.0), 1);
     dim3 block(32, 1);
     kl_updateAgents(grid, block,
+        deltaTime,
         agentRandomState_,
         reinterpret_cast<float4*>(trailMapFront_),
         agents_,
         nAgents_,
-        agentConfig_.speed * deltaTime,
-        agentConfig_.turnSpeed * deltaTime,
-        agentConfig_.sensorAngleSpacing,
-        agentConfig_.sensorOffsetDst,
-        agentConfig_.sensorSize,
+        agentConfigGPU_,
         static_cast<float>(trailWeight * deltaTime),
         width_,
         height_,
@@ -428,7 +473,7 @@ void Simulation::updateAgents(double deltaTime, float trailWeight)
 
 void Simulation::updatePopulationShare(float* newPopulationShare)
 {
-    std::copy(newPopulationShare, newPopulationShare + SHARE_SIZE, agentShares_);
+    std::copy(newPopulationShare, newPopulationShare + DIFFERENT_SPECIES, agentShares_);
     this->updateSpecies();
 }
 
@@ -446,7 +491,7 @@ void Simulation::updateSpecies()
         Agent& ag = cpuAgents[idx];
         if (populationReserve[ag.speciesIdx] == 0)
         {
-            ag.speciesIdx = (ag.speciesIdx + 1) % SHARE_SIZE;
+            ag.speciesIdx = (ag.speciesIdx + 1) % DIFFERENT_SPECIES;
             ag.speciesMask = {
                 ag.speciesIdx == 0 ? 1 : 0,
                 ag.speciesIdx == 1 ? 1 : 0,

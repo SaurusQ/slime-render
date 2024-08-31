@@ -15,7 +15,9 @@ constexpr unsigned int W_4K = 320;
 constexpr unsigned int H_4K = 180;
 #endif
 
-#define SHARE_SIZE 4
+#define DIFFERENT_SPECIES 4
+
+constexpr const char* agentNames[] = {"X", "Y", "Z", "W"};
 
 struct RGBA
 {
@@ -23,6 +25,13 @@ struct RGBA
     float g;
     float b;
     float a;
+};
+
+struct AgentColors
+{
+    float r;
+    float g;
+    float b;
 };
 
 struct Agent
@@ -43,6 +52,9 @@ struct AgentConfig
 };
 
 typedef AgentConfig AgentConfig_I;
+typedef AgentConfig AgentConfig_GPU;
+typedef AgentColors AgentColors_I;
+typedef AgentColors AgentColors_GPU;
 
 enum class StartFormation {
     CONFIGURED,
@@ -54,8 +66,9 @@ enum class StartFormation {
 
 struct SimConfig
 {
-    AgentConfig ac;
-    float agentShare[SHARE_SIZE];
+    AgentConfig aConfigs[DIFFERENT_SPECIES];
+    AgentColors aColors[DIFFERENT_SPECIES];
+    float agentShare[DIFFERENT_SPECIES];
     int numAgents;
     float evaporate;
     float diffuse;
