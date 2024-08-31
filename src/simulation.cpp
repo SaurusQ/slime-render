@@ -379,7 +379,7 @@ void Simulation::updatePopulationSize(unsigned int newAgents)
 
     if (nAgents_ < newAgents) // We need to set the parameters of the new agents
     {
-        std::cout << "agents old: " << nAgents_ << " agents new: " << newAgents << std::endl;
+        //std::cout << "agents old: " << nAgents_ << " agents new: " << newAgents << std::endl;
         while (newAgents - nAgents_ > nAgents_) // Added too many agents to make unique copies
         {
             unsigned int newAgents = newAgents - nAgents_;
@@ -407,7 +407,7 @@ void Simulation::updatePopulationSize(unsigned int newAgents)
 
     nAgents_ = newAgents;
     this->updateSpecies();
-    std::cout << "Final count: " << nAgents_ << std::endl;
+    //std::cout << "Final count: " << nAgents_ << std::endl;
 }
 
 void Simulation::configAgentParameters(AgentConfig* aConfigs, AgentColor* aColors) {
