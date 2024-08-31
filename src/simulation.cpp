@@ -6,6 +6,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <random>
+#include <algorithm>
 
 #define REQUIRE_CUDA if(!cudaActive_) { std::cout << "cuda not active" << std::endl; return; };
 
@@ -258,13 +259,15 @@ void Simulation::updateTrailMap(double deltaTime, float diffuseWeight, float eva
         );
     }
 
+    float diffuseDT = std::max(1.0f, static_cast<float>(diffuseWeight * deltaTime));
+
     dim3 grid(width_ / 32, height_ / 32);
     dim3 block(32, 32);
     kl_updateTrailMap(grid, block,
         reinterpret_cast<float4*>(trailMapFront_),
         reinterpret_cast<float4*>(trailMapBack_),
         relativeIdxsGPUptr_,
-        diffuseWeight * deltaTime,
+        diffuseDT,
         evaporateWeight * deltaTime,
         padWidth_,
         padOffset_

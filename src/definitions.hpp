@@ -27,12 +27,14 @@ struct RGBA
     float a;
 };
 
-struct AgentColor
+struct RGB
 {
     float r;
     float g;
     float b;
 };
+
+typedef RGB AgentColor;
 
 struct Agent
 {

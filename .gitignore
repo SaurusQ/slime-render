@@ -1,4 +1,8 @@
 build/
-lib/
 .vscode/
 imgui.ini
+current_config.json
+
+lib/*
+!lib/json.hpp
+!lib/glad/

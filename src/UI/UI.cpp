@@ -1,6 +1,6 @@
 #include "UI.hpp"
 
-#include "string"
+#include <string>
 
 UI::UI(GLFWwindow* wnd)
 {
