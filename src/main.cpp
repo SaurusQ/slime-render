@@ -2,6 +2,7 @@
 #include "simulation.hpp"
 #include "shaderHandler.hpp"
 #include "definitions.hpp"
+#include "configReader.hpp"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -19,6 +20,7 @@
 #include <chrono>
 #include <thread>
 
+ConfigReader reader("./config.json");
 SimConfig simConfig;
 
 bool showUI = false;
@@ -74,6 +76,10 @@ void key_callback(GLFWwindow* wnd, int key, int scancode, int action, int mods)
         showUI = !showUI;
     if (key == GLFW_KEY_C && action == GLFW_PRESS)
         simConfig.updateAgents = !simConfig.updateAgents;
+    if (key == GLFW_KEY_N && action == GLFW_PRESS)
+        reader.next(simConfig);
+    if (key == GLFW_KEY_O && action == GLFW_PRESS)
+        reader.printOutConfig(simConfig);
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
     {
         zoom = 1.0;

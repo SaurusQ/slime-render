@@ -79,7 +79,7 @@ ConfigReader::ConfigReader(std::string filepath)
                     idx++;
                     if (idx == DIFFERENT_SPECIES) break;
                 }
-                for (int i; i < DIFFERENT_SPECIES; i++)
+                for (int i = 0; i < DIFFERENT_SPECIES; i++)
                 {
                     sc.agentShare[i] = shares[i] / total; // Balance to total of 1.0
                 }
@@ -89,9 +89,9 @@ ConfigReader::ConfigReader(std::string filepath)
         if (su.contains("trail"))
         {
             const auto& trail = su["trail"];
-            if (trail.contains("evaporate"))    sc.evaporate    = su["evaporate"].get<float>();
-            if (trail.contains("diffuse"))      sc.diffuse      = su["diffuse"].get<float>();
-            if (trail.contains("trail_weight")) sc.trailWeight  = su["trail_weight"].get<float>();
+            if (trail.contains("evaporate"))    sc.evaporate    = trail["evaporate"].get<float>();
+            if (trail.contains("diffuse"))      sc.diffuse      = trail["diffuse"].get<float>();
+            if (trail.contains("trail_weight")) sc.trailWeight  = trail["trail_weight"].get<float>();
         }
         configsF_[frame] = sc;
         auto it = configsF_.find(0);
@@ -103,7 +103,7 @@ ConfigReader::ConfigReader(std::string filepath)
     }
 }
 
-bool ConfigReader::next(SimConfig& sc, AgentColor* ac)
+bool ConfigReader::next(SimConfig& sc)
 {
     bool end = false;
     while(currentFrame_ <= endFrame_ && !end)
@@ -120,7 +120,7 @@ bool ConfigReader::next(SimConfig& sc, AgentColor* ac)
             sc = scu;
 
             // Keep some things constant
-            sc.updateAgents = updateAgents;
+            sc.updateAgents = true;
             sc.clearOnSpawn = clearOnSpawn;
             sc.startFormation = sf;
         }
@@ -132,6 +132,7 @@ bool ConfigReader::next(SimConfig& sc, AgentColor* ac)
 void ConfigReader::printOutConfig(const SimConfig& sc)
 {
     std::ofstream file(OUT_FILE);
+    std::cout << "Printing out printOutConfig" << std::endl;
 
     if (!file.is_open())
     {
@@ -170,7 +171,7 @@ void ConfigReader::printOutConfig(const SimConfig& sc)
         {"trail_weight", sc.trailWeight}
     };
 
-    json jsonRes = {"simconfig", json::array()};
+    json jsonRes = {{"simconfig", json::array()}};
     jsonRes["simconfig"].push_back(jsonObj);
 
     file << jsonRes.dump(4);

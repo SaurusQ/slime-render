@@ -1,0 +1,48 @@
+{
+    "simconfig": [
+        {
+            "colors": "#000000 #000000 #000000 #000000",
+            "frame": 0,
+            "population": {
+                "agent_share": [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                "num_agents": 10000
+            },
+            "species": [
+                {
+                    "sensor_angle": 0.0,
+                    "sensor_dist": 0.0,
+                    "speed": 0.0,
+                    "turn_speed": 0.0
+                },
+                {
+                    "sensor_angle": 0.0,
+                    "sensor_dist": 0.0,
+                    "speed": 0.0,
+                    "turn_speed": 0.0
+                },
+                {
+                    "sensor_angle": 0.0,
+                    "sensor_dist": 0.0,
+                    "speed": 0.0,
+                    "turn_speed": 0.0
+                },
+                {
+                    "sensor_angle": 0.0,
+                    "sensor_dist": 0.0,
+                    "speed": 0.0,
+                    "turn_speed": 0.0
+                }
+            ],
+            "trail": {
+                "diffuse": 0.0,
+                "evaporate": 0.0,
+                "trail_weight": 0.0
+            }
+        }
+    ]
+}

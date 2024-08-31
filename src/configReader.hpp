@@ -14,7 +14,7 @@ class ConfigReader
 public:
     ConfigReader(std::string filepath);
 
-    bool next(SimConfig& sc, AgentColor* ac);
+    bool next(SimConfig& sc);
 
     void printOutConfig(const SimConfig& sc);
 
