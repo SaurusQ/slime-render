@@ -17,6 +17,7 @@ public:
     bool next(SimConfig& sc);
 
     void printOutConfig(const SimConfig& sc);
+    void printOutConsole(const SimConfig& config);
 
 private:
     RGB hexToColor(std::string hex);
