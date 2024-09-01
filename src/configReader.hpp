@@ -6,14 +6,14 @@
 #include <vector>
 #include <map>
 
-
 #define OUT_FILE "current_config.json"
 
 class ConfigReader
 {
 public:
-    ConfigReader(std::string filepath);
+    ConfigReader() {}
 
+    bool readConfig(std::string filepath);
     bool next(SimConfig& sc);
 
     void printOutConfig(const SimConfig& sc);

@@ -7,14 +7,16 @@
 
 using json = nlohmann::json;
 
-ConfigReader::ConfigReader(std::string filepath)
+bool ConfigReader::readConfig(std::string filepath)
 {
+    std::cout << "Fetching config: " << filepath << std::endl;
+
     std::ifstream file(filepath);
 
     if(!file.is_open())
     {
         std::cerr << "failed to open:" << filepath << std::endl;
-        return;
+        return false;
     }
 
     json jsonData;
@@ -22,7 +24,7 @@ ConfigReader::ConfigReader(std::string filepath)
         file >> jsonData;
     } catch (json::parse_error& e) {
         std::cerr << "Error parsing JSON: " << e.what() << std::endl;
-        return;
+        return false;
     }
     file.close();
 
@@ -126,6 +128,7 @@ ConfigReader::ConfigReader(std::string filepath)
             std::cout << "WARNING: json was not configured with zero frame for simconfig" << std::endl;
         }
     }
+    return true;
 }
 
 bool ConfigReader::next(SimConfig& sc)

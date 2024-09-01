@@ -20,7 +20,7 @@
 #include <chrono>
 #include <thread>
 
-ConfigReader reader("./config.json");
+ConfigReader reader;
 SimConfig simConfig;
 
 bool showUI = false;
@@ -145,12 +145,16 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     }
 }*/
 
-int main()
+int main(int argc, char** argv)
 {
+    std::string configJson = "config.json";
+    if (argc >= 2)
+    {
+        configJson = argv[1];
+    }
+
+    reader.readConfig(configJson);
     reader.next(simConfig); // Get the first config
-    simConfig.updateAgents = false;
-    simConfig.clearOnSpawn = false;
-    simConfig.startFormation = StartFormation::CONFIGURED;
 
     GLFWwindow* window;
 
