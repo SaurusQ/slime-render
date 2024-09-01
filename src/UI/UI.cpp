@@ -42,11 +42,11 @@ void UI::update(GLFWwindow*wnd, SimConfig& sc, SimUpdate& su)
                 std::string headerLabel = "Agent config: " + std::string(agentNames[i]);
                 if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
                 {
-                    su.agentSettings |= ImGui::DragFloat  ((std::string(agentNames[i]) + " speed").c_str(),          &sc.aConfigs[i].speed, 1, 0.0, 100.0);
+                    su.agentSettings |= ImGui::DragFloat  ((std::string(agentNames[i]) + " speed").c_str(),          &sc.aConfigs[i].speed, 1, 0.0, 1000.0);
                     su.agentSettings |= ImGui::SliderFloat((std::string(agentNames[i]) + " turn speed").c_str(),     &sc.aConfigs[i].turnSpeed, 0.0, 1000.0);
-                    su.agentSettings |= ImGui::SliderFloat((std::string(agentNames[i]) + " sensor angle").c_str(),   &sc.aConfigs[i].sensorAngleSpacing, 22.5, 45.0);
+                    su.agentSettings |= ImGui::SliderFloat((std::string(agentNames[i]) + " sensor angle").c_str(),   &sc.aConfigs[i].sensorAngleSpacing, 5.0, 90.0); // 22.5, 45.0
                     su.agentSettings |= ImGui::SliderFloat((std::string(agentNames[i]) + " sensor offset").c_str(),  &sc.aConfigs[i].sensorOffsetDst, 1.0, 50.0);
-                    su.agentSettings |= ImGui::SliderInt  ((std::string(agentNames[i]) + " sensor size").c_str(),    (int*)&sc.aConfigs[i].sensorSize, 0, 10.0);
+                    //su.agentSettings |= ImGui::SliderInt  ((std::string(agentNames[i]) + " sensor size").c_str(),    (int*)&sc.aConfigs[i].sensorSize, 0, 10.0);
                 }
             }
             if (ImGui::CollapsingHeader("Agent colors", ImGuiTreeNodeFlags_DefaultOpen))

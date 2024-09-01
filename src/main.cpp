@@ -142,9 +142,76 @@ void fpsHandler(double cur, GLFWwindow* window)
     }
 }
 
+void printSimConfig(const SimConfig& config)
+{
+    std::cout << "SimConfig:" << std::endl;
+    
+    // Print AgentConfigs
+    for (int i = 0; i < DIFFERENT_SPECIES; ++i)
+    {
+        std::cout << "  AgentConfig[" << i << "]:" << std::endl;
+        std::cout << "    Speed: " << config.aConfigs[i].speed << std::endl;
+        std::cout << "    Turn Speed: " << config.aConfigs[i].turnSpeed << std::endl;
+        std::cout << "    Sensor Angle Spacing: " << config.aConfigs[i].sensorAngleSpacing << std::endl;
+        std::cout << "    Sensor Offset Distance: " << config.aConfigs[i].sensorOffsetDst << std::endl;
+        std::cout << "    Sensor Size: " << config.aConfigs[i].sensorSize << std::endl;
+    }
+
+    // Print AgentColors
+    for (int i = 0; i < DIFFERENT_SPECIES; ++i)
+    {
+        std::cout << "  AgentColor[" << i << "]:" << std::endl;
+        std::cout << "    R: " << config.aColors[i].r << std::endl;
+        std::cout << "    G: " << config.aColors[i].g << std::endl;
+        std::cout << "    B: " << config.aColors[i].b << std::endl;
+    }
+
+    // Print agent shares
+    for (int i = 0; i < DIFFERENT_SPECIES; ++i)
+    {
+        std::cout << "  Agent Share[" << i << "]: " << config.agentShare[i] << std::endl;
+    }
+
+    // Print other SimConfig fields
+    std::cout << "  Number of Agents: " << config.numAgents << std::endl;
+    std::cout << "  Evaporate: " << config.evaporate << std::endl;
+    std::cout << "  Diffuse: " << config.diffuse << std::endl;
+    std::cout << "  Trail Weight: " << config.trailWeight << std::endl;
+    std::cout << "  Update Agents: " << (config.updateAgents ? "true" : "false") << std::endl;
+    std::cout << "  Clear On Spawn: " << (config.clearOnSpawn ? "true" : "false") << std::endl;
+
+    // Print start formation (example output)
+    std::cout << "  Start Formation: ";
+    switch (config.startFormation)
+    {
+        case StartFormation::CONFIGURED:
+            std::cout << "CONFIGURED" << std::endl;
+            break;
+        case StartFormation::RANDOM:
+            std::cout << "RANDOM" << std::endl;
+            break;
+        case StartFormation::MIDDLE:
+            std::cout << "MIDDLE" << std::endl;
+            break;
+        case StartFormation::CIRCLE:
+            std::cout << "CIRCLE" << std::endl;
+            break;
+        case StartFormation::RANDOM_CIRCLE:
+            std::cout << "RANDOM_CIRCLE" << std::endl;
+            break;
+        default:
+            std::cout << "UNKNOWN" << std::endl;
+            break;
+    }
+}
+
 int main()
 {
-    simConfig.numAgents = 10000;
+    reader.next(simConfig); // Get the first config
+    simConfig.updateAgents = false;
+    simConfig.clearOnSpawn = false;
+    simConfig.startFormation = StartFormation::CONFIGURED;
+
     GLFWwindow* window;
 
     /* Initialize the library */

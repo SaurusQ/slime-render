@@ -371,11 +371,15 @@ void Simulation::updatePopulationSize(unsigned int newAgents)
             cudaMalloc((void**)&newArray, newArraySize * sizeof(Agent)),
             "cudaMalloc agents"
         );
-        this->checkCudaError(
-            cudaMemcpy(newArray, agents_, std::min(nAgents_, newAgents) * sizeof(Agent), cudaMemcpyDeviceToDevice),
-            "cudaMemcpy oldAgents to new agent array from gpu to gpu"
-        );
-        cudaFree(agents_);
+        if (agents_ != nullptr)
+        {
+            std::cout << "agents_ is nullptr!!!!!!!!!!!" << std::endl;
+            this->checkCudaError(
+                cudaMemcpy(newArray, agents_, std::min(nAgents_, newAgents) * sizeof(Agent), cudaMemcpyDeviceToDevice),
+                "cudaMemcpy oldAgents to new agent array from gpu to gpu"
+            );
+            cudaFree(agents_);
+        }
         agents_ = newArray;
         nAgentsGpuSize_ = newArraySize;
     }

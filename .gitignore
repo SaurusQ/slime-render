@@ -1,7 +1,8 @@
 build/
 .vscode/
 imgui.ini
-current_config.json
+*.json
+config.json
 
 lib/*
 !lib/json.hpp

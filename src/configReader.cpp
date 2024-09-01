@@ -30,6 +30,32 @@ ConfigReader::ConfigReader(std::string filepath)
     std::cout << jsonData.dump(4) << std::endl;
 
     SimConfig sc;
+    // Set defaults
+    for (int i = 0; i < DIFFERENT_SPECIES; i++)
+    {
+        sc.aConfigs[i].speed                = 100.0f;
+        sc.aConfigs[i].turnSpeed            = 200.0f;
+        sc.aConfigs[i].sensorAngleSpacing   = 22.5f;
+        sc.aConfigs[i].sensorOffsetDst      = 9.0f;
+        sc.aConfigs[i].sensorSize           = 0;
+
+        sc.aColors[i].r = 0.2f;
+        sc.aColors[i].g = 0.2f;
+        sc.aColors[i].b = 0.2f;
+
+        sc.agentShare[i] = 0.0f;
+    }
+    sc.agentShare[0] = 1.0f;
+
+    sc.numAgents    = 1000;
+    sc.evaporate    = 0.02f;
+    sc.diffuse      = 1.0f;
+    sc.trailWeight  = 1.0f;
+    
+    sc.updateAgents = true;
+    sc.clearOnSpawn = true;
+    sc.startFormation = StartFormation::RANDOM_CIRCLE;
+
     for (const auto& su : jsonData["simconfig"])
     {
         unsigned int frame = su["frame"].get<int>();
@@ -75,7 +101,7 @@ ConfigReader::ConfigReader(std::string filepath)
                 {
                     float s = share.get<float>();
                     total += s;
-                    shares[idx] == s;
+                    shares[idx] = s;
                     idx++;
                     if (idx == DIFFERENT_SPECIES) break;
                 }
@@ -83,7 +109,6 @@ ConfigReader::ConfigReader(std::string filepath)
                 {
                     sc.agentShare[i] = shares[i] / total; // Balance to total of 1.0
                 }
-
             }
         }
         if (su.contains("trail"))
@@ -113,16 +138,21 @@ bool ConfigReader::next(SimConfig& sc)
         {
             end = true;
             const SimConfig& scu = configIt->second;
-            bool updateAgents = sc.updateAgents;
-            bool clearOnSpawn = sc.clearOnSpawn;
-            StartFormation sf = sc.startFormation;
 
-            sc = scu;
+            for (int i = 0; i < DIFFERENT_SPECIES; i++)
+            {
+                sc.aConfigs[i]      = scu.aConfigs[i];
+                sc.aColors[i]       = scu.aColors[i];
+                sc.agentShare[i]    = scu.agentShare[i];
+            }
 
-            // Keep some things constant
+            sc.numAgents    = scu.numAgents;
+            sc.evaporate    = scu.evaporate;
+            sc.diffuse      = scu.diffuse;
+            sc.trailWeight  = scu.trailWeight;
+
+            // Force update agents on
             sc.updateAgents = true;
-            sc.clearOnSpawn = clearOnSpawn;
-            sc.startFormation = sf;
         }
         currentFrame_++;
     }
