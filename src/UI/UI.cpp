@@ -63,9 +63,9 @@ void UI::updateConfig(SimConfig& sc, SimUpdate& su)
             {
                 for (int i = 0; i < DIFFERENT_SPECIES; i++)
                 {
-                        su.agentSettings |= ImGui::SliderFloat((std::string(agentNames[i]) + " Red  ").c_str(), &sc.aColors[i].r, 0.0, 1.0);
-                        su.agentSettings |= ImGui::SliderFloat((std::string(agentNames[i]) + " Green").c_str(), &sc.aColors[i].g, 0.0, 1.0);
-                        su.agentSettings |= ImGui::SliderFloat((std::string(agentNames[i]) + " Blue ").c_str(), &sc.aColors[i].b, 0.0, 1.0);
+                        su.agentSettings |= ImGui::ColorEdit3(agentNames[i], reinterpret_cast<float*>(&sc.aColors[i]),
+                            ImGuiColorEditFlags_DisplayHex
+                        );
                 }
             }
         }
