@@ -22,12 +22,22 @@ UI::~UI()
     ImGui::DestroyContext();
 }
 
-void UI::update(GLFWwindow*wnd, SimConfig& sc, SimUpdate& su)
+void UI::update(SimConfig& sc, SimUpdate& su, bool showConfig, bool showFps)
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
+    if (showConfig) updateConfig(sc, su);
+    if (showFps) updateFps();
+
+    // Render UI
+    ImGui::Render();
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+
+void UI::updateConfig(SimConfig& sc, SimUpdate& su)
+{
     // Draw UI
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     ImGuiIO& io = ImGui::GetIO();
@@ -105,10 +115,29 @@ void UI::update(GLFWwindow*wnd, SimConfig& sc, SimUpdate& su)
 
         ImGui::End();
     }
+}
 
-    // Render UI
-    ImGui::Render();
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+void UI::updateFps()
+{
+    ImGui::SetNextWindowPos(ImVec2(0, 0), ImGuiCond_Always);
+    ImGui::SetNextWindowSize(ImVec2(100, 20), ImGuiCond_Always);
+
+    ImGui::Begin("fps", nullptr,
+        ImGuiWindowFlags_NoTitleBar |
+        ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_NoMove |
+        ImGuiWindowFlags_NoScrollbar |
+        ImGuiWindowFlags_NoSavedSettings |
+        ImGuiWindowFlags_AlwaysAutoResize |
+        ImGuiWindowFlags_NoDecoration |
+        ImGuiWindowFlags_NoBackground
+    );
+
+    ImGuiIO& io = ImGui::GetIO();
+    float fps = io.Framerate;
+    ImGui::Text("FPS: %.1f", fps);
+
+    ImGui::End();
 }
 
 void UI::balanceShare(float changed, float& a, float& b, float& c)

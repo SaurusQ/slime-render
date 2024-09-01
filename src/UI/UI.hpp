@@ -13,7 +13,11 @@ public:
     UI(GLFWwindow* wnd);
     ~UI();
 
-    void update(GLFWwindow* wnd, SimConfig& sc, SimUpdate& su);
+    void update(SimConfig& sc, SimUpdate& su, bool showConfig, bool showFps);
+
 private:
+    void updateConfig(SimConfig& sc, SimUpdate& su);
+    void updateFps();
+
     void balanceShare(float changed, float& a, float& b, float& c);
 };

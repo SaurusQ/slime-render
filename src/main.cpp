@@ -24,6 +24,7 @@ ConfigReader reader("./config.json");
 SimConfig simConfig;
 
 bool showUI = false;
+bool showFps = false;
 bool dragMouse = false;
 
 float translateY = 0.0;
@@ -80,6 +81,8 @@ void key_callback(GLFWwindow* wnd, int key, int scancode, int action, int mods)
         reader.next(simConfig);
     if (key == GLFW_KEY_O && action == GLFW_PRESS)
         reader.printOutConfig(simConfig);
+    if (key == GLFW_KEY_F && action == GLFW_PRESS)
+        showFps = !showFps;
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
     {
         zoom = 1.0;
@@ -125,7 +128,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-void fpsHandler(double cur, GLFWwindow* window)
+/*void fpsHandler(double cur, GLFWwindow* window)
 {
     static unsigned int nFrames = 0;
     static double last = glfwGetTime();
@@ -140,7 +143,7 @@ void fpsHandler(double cur, GLFWwindow* window)
         glfwSetWindowTitle(window, ss.str().c_str());
         nFrames = 0;
     }
-}
+}*/
 
 void printSimConfig(const SimConfig& config)
 {
@@ -300,7 +303,7 @@ int main()
         lastTime = currentTime;
         currentTime = glfwGetTime();
         deltaTime = currentTime - lastTime;
-        fpsHandler(currentTime, window);
+        //fpsHandler(currentTime, window);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -360,9 +363,9 @@ int main()
 
         simUpdate = {false, false, false, false, false};
 #ifdef GUI
-        if (showUI)
+        if (showUI || showFps)
         {
-            configUI.update(window, simConfig, simUpdate);
+            configUI.update(simConfig, simUpdate, showUI, showFps);
         }
 #endif
 
