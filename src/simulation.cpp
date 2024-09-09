@@ -140,10 +140,15 @@ void Simulation::update(const Image& img)
 void Simulation::readBack(const Image& img) const
 {
     REQUIRE_CUDA
-    /*this->checkCudaError(
-        cudaMemcpy((void*)img.getPtr(), (void*)imageGPUptr_, bufferSize_, cudaMemcpyDeviceToHost),
-        "cudaMemcpy readback()"
-    );*/
+    if (resultCudaImg_ != nullptr)
+    {
+        this->checkCudaError(
+            cudaMemcpy((void*)img.getPtr(), (void*)resultCudaImg_, bufferSize_, cudaMemcpyDeviceToHost),
+            "cudaMemcpy readback()"
+        );
+    } else {
+        std::cerr << "Result image not configured" << std::endl;
+    }
 }
 
 void Simulation::clearImage()

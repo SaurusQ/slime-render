@@ -3,7 +3,10 @@ build/
 imgui.ini
 *.json
 config.json
+*.png
+!slime.png
 
 lib/*
 !lib/json.hpp
+!lib/stb_image_write.h
 !lib/glad/

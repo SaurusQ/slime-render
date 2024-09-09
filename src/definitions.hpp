@@ -4,15 +4,15 @@
 
 #include <inttypes.h>
 
-#if 0
-constexpr unsigned int W_4K = 3840;
-constexpr unsigned int H_4K = 2160;
-#elif 1
-constexpr unsigned int W_4K = 2560;
-constexpr unsigned int H_4K = 1440;
+#if 1
+constexpr unsigned int IMG_W_CONFIG = 3840;
+constexpr unsigned int IMG_H_CONFIG = 2160;
+#elif 0
+constexpr unsigned int IMG_W_CONFIG = 2560;
+constexpr unsigned int IMG_H_CONFIG = 1440;
 #else
-constexpr unsigned int W_4K = 320;
-constexpr unsigned int H_4K = 180;
+constexpr unsigned int IMG_W_CONFIG = 320;
+constexpr unsigned int IMG_H_CONFIG = 180;
 #endif
 
 #define DIFFERENT_SPECIES 4

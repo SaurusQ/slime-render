@@ -22,10 +22,12 @@
 
 ConfigReader reader;
 SimConfig simConfig;
+Simulation* pSimulation;
 
 bool showUI = false;
 bool showFps = false;
 bool dragMouse = false;
+bool takeScreenshot = false;
 
 float translateY = 0.0;
 float translateX =  0.0;
@@ -83,6 +85,8 @@ void key_callback(GLFWwindow* wnd, int key, int scancode, int action, int mods)
         reader.printOutConfig(simConfig);
     if (key == GLFW_KEY_F && action == GLFW_PRESS)
         showFps = !showFps;
+    if (key == GLFW_KEY_S && action == GLFW_PRESS)
+        takeScreenshot = true;
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
     {
         zoom = 1.0;
@@ -163,7 +167,7 @@ int main(int argc, char** argv)
         return -1;
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(W_4K, H_4K, wndName, NULL, NULL);
+    window = glfwCreateWindow(IMG_W_CONFIG, IMG_H_CONFIG, wndName, NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -214,7 +218,7 @@ int main(int argc, char** argv)
     UI configUI(window);
 #endif
 
-    Image img{W_4K, H_4K};
+    Image img{IMG_W_CONFIG, IMG_H_CONFIG};
     Simulation simulation{img};
     GLuint texture = simulation.getTexture();
     simulation.activateCuda();
@@ -282,6 +286,16 @@ int main(int argc, char** argv)
             simulation.updateAgents(deltaTime, simConfig.trailWeight);
             simulation.updateTrailMap(deltaTime, simConfig.diffuse, simConfig.evaporate);
             simulation.trailMapToDisplay();
+        }
+        if (takeScreenshot)
+        {
+            auto start = std::chrono::high_resolution_clock::now();
+            takeScreenshot = false;
+            simulation.readBack(img);
+            img.toFile();
+            auto end = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> elapsed = end - start;
+            currentTime += elapsed.count(); // Make the simulation go smoother when the image is exported.
         }
         simulation.deactivateCuda();
 

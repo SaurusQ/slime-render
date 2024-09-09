@@ -1,7 +1,13 @@
 #include "image.hpp"
 
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 #include <random>
 #include <math.h>
+#include <chrono>
+#include <sstream>
+#include <iomanip>
 
 Image::Image(unsigned int width, unsigned int heigth)
 {
@@ -19,6 +25,47 @@ Image::Image(unsigned int width, unsigned int heigth)
 Image::~Image()
 {
 
+}
+
+void Image::toFile() const
+{
+    RGBA* threadImg = new RGBA[width_ * height_];
+
+    std::copy(imagePtr_.get(), imagePtr_.get() + (width_ * height_), threadImg);
+
+    auto saveToFile = [this, threadImg]() {
+        unsigned char* imageData = new unsigned char[width_ * height_ * 4];
+
+        for (int i = 0; i < width_ * height_; ++i) {
+            float r = threadImg[i].r;
+            float g = threadImg[i].g;
+            float b = threadImg[i].b;
+            float a = threadImg[i].a;
+
+            // Convert float [0.0, 1.0] to unsigned char [0, 255]
+            imageData[i * 4 + 0] = static_cast<unsigned char>(r * 255.0f);
+            imageData[i * 4 + 1] = static_cast<unsigned char>(g * 255.0f);
+            imageData[i * 4 + 2] = static_cast<unsigned char>(b * 255.0f);
+            imageData[i * 4 + 3] = static_cast<unsigned char>(a * 255.0f);
+        }
+
+        auto now = std::chrono::system_clock::now();
+        std::time_t now_c = std::chrono::system_clock::to_time_t(now);
+        std::tm now_tm = *std::localtime(&now_c);
+
+        std::stringstream filename;
+        filename << "sim_";
+        filename << std::put_time(&now_tm, "%Y-%m-%d_%H-%M-%S");
+        filename << ".png";
+
+        stbi_write_png(filename.str().c_str(), width_, height_, 4, imageData, width_ * 4);
+
+        delete[] threadImg;
+        delete[] imageData;
+    };
+
+    std::thread thread(saveToFile);
+    thread.detach();
 }
 
 void Image::randomize()

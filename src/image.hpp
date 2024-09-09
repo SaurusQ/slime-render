@@ -4,12 +4,15 @@
 
 #include <inttypes.h>
 #include <memory>
+#include <thread>
+#include <vector>
 
 class Image
 {
 public:
     Image(unsigned int width, unsigned int height);
     ~Image();
+    void toFile() const;
     void randomize();
     void setColor(RGBA color);
     void drawCircle(unsigned int x, unsigned int y, unsigned int radius, RGBA rgb);
