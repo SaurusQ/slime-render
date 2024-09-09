@@ -81,4 +81,7 @@ private:
     float agentShares_[4] = {1.0f, 0.0f, 0.0f, 0.0f};
     unsigned int nAgents_ = 0;
     unsigned int nAgentsGpuSize_ = 0;
+
+    dim3 gridI_;
+    dim3 block_ = dim3(BLOCK_SIZE, BLOCK_SIZE);
 };

@@ -10,13 +10,8 @@
 #include <iomanip>
 
 Image::Image(unsigned int width, unsigned int heigth)
+    : width_(width), height_(heigth) 
 {
-    // Image only handles values with a factor of 32
-    if (width % 32)  width_  = width + (32 - width % 32); // TODO let the image be any size, limit in kernel and correct block dims
-    else             width_  = width;
-    if (heigth % 32) height_ = heigth + (32 - heigth % 32);
-    else             height_ = heigth;
-
     pixels_ = width_ * height_;
     imagePtr_ = std::make_unique<RGBA[]>(pixels_);
     std::fill(imagePtr_.get(), imagePtr_.get() + pixels_, RGBA{0.0f, 0.0f, 0.0f, 1.0f});

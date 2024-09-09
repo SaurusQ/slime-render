@@ -9,6 +9,8 @@ void kl_updateTrailMap(dim3 grid, dim3 block,
     int* relativeIdxs,
     float diffuseDT,
     float evaporateDT,
+    unsigned int width,
+    unsigned int heigth,
     unsigned int padWidth,
     unsigned int padOffset
 );
@@ -19,6 +21,8 @@ __global__ void k_updateTrailMap(
     int* relativeIdxs,
     float diffuseDT,
     float evaporateDT,
+    unsigned int width,
+    unsigned int heigth,
     unsigned int padWidth,
     unsigned int padOffset
 );

@@ -20,11 +20,13 @@ void kl_updateTrailMap(dim3 grid, dim3 block,
     int* relativeIdxs,
     float diffuseDT,
     float evaporateDT,
+    unsigned int width,
+    unsigned int heigth,
     unsigned int padWidth,
     unsigned int padOffset
 )
 {
-    k_updateTrailMap<<<grid, block>>>(trailMapFront, trailMapBack, relativeIdxs, diffuseDT, evaporateDT, padWidth, padOffset);
+    k_updateTrailMap<<<grid, block>>>(trailMapFront, trailMapBack, relativeIdxs, diffuseDT, evaporateDT, width, heigth, padWidth, padOffset);
 }
 
 __global__ void k_updateTrailMap(
@@ -33,12 +35,16 @@ __global__ void k_updateTrailMap(
     int* relativeIdxs,
     float diffuseDT,
     float evaporateDT,
+    unsigned int width,
+    unsigned int heigth,
     unsigned int padWidth,
     unsigned int padOffset
 )
 {
-    int x = blockIdx.x * 32 + threadIdx.x;
-    int y = blockIdx.y * 32 + threadIdx.y;
+    int x = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+    int y = blockIdx.y * BLOCK_SIZE + threadIdx.y;
+
+    if (x >= width || y >= heigth) return;
 
     int idxPad = padOffset + x + y * padWidth;
 
@@ -91,7 +97,7 @@ __global__ void k_updateAgents(
     unsigned int padOffset
 )
 {
-    int agentIdx = blockIdx.x * 32 + threadIdx.x;
+    int agentIdx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
     if (agentIdx >= nAgents) return;
     Agent* agent = agents + agentIdx;
     
@@ -213,8 +219,8 @@ __global__ void k_trailMapToDisplay(
     unsigned int padOffset
 )
 {
-    int x = blockIdx.x * 32 + threadIdx.x;
-    int y = blockIdx.y * 32 + threadIdx.y;
+    int x = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+    int y = blockIdx.y * BLOCK_SIZE + threadIdx.y;
 
     if (x >= width || y >= heigth) return;
 

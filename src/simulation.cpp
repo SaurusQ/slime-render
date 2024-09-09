@@ -33,6 +33,19 @@ unsigned int roundUpToPowerOfTwo(unsigned int x) {
 
 Simulation::Simulation(const Image& img)
 {
+
+    cudaDeviceProp prop;
+    int device = 0;  // Assuming you're using device 0 (your GTX 1050)
+    cudaGetDeviceProperties(&prop, device);
+
+    std::cout << "Device Name: " << prop.name << std::endl;
+    std::cout << "Max threads per block: " << prop.maxThreadsPerBlock << std::endl;
+    std::cout << "Max block dimensions: " << prop.maxThreadsDim[0] << " x " << prop.maxThreadsDim[1] << " x " << prop.maxThreadsDim[2] << std::endl;
+    std::cout << "Max grid dimensions: " << prop.maxGridSize[0] << " x " << prop.maxGridSize[1] << " x " << prop.maxGridSize[2] << std::endl;
+    std::cout << "Total global memory: " << prop.totalGlobalMem / (1024 * 1024) << " MB" << std::endl;
+    std::cout << "Shared memory per block: " << prop.sharedMemPerBlock / 1024.0 << " KB" << std::endl;
+    std::cout << "Warp size: " << prop.warpSize << std::endl;
+
     width_              = img.getWidth();
     height_             = img.getHeigth();
     padding_            = 1;
@@ -41,6 +54,7 @@ Simulation::Simulation(const Image& img)
     padWidth_           = 2 * padding_ + width_;
     padOffset_ = padding_ * padWidth_ + padding_;
 
+    gridI_ = dim3(std::ceil(width_ / BLOCK_SIZE_F), std::ceil(height_ / BLOCK_SIZE_F));
 
     this->checkCudaError(
         cudaMalloc((void**)&trailMapFront_, bufferSizePadded_),
@@ -216,9 +230,7 @@ void Simulation::trailMapToDisplay()
         cudaMemcpy2D((void*)resultCudaImg_, width_ * sizeof(RGBA), (void*)(trailMapFront_ + padOffset_), padWidth_ * sizeof(RGBA), width_ * sizeof(RGBA), height_, cudaMemcpyDeviceToDevice),
         "cudaMemcpy trailMapToDisplay()"
     );*/
-    dim3 grid(width_ / 32, height_ / 32);
-    dim3 block(32, 32);
-    kl_trailMapToDisplay(grid, block,
+    kl_trailMapToDisplay(gridI_, block_,
         reinterpret_cast<float4*>(trailMapFront_),
         reinterpret_cast<float4*>(resultCudaImg_),
         reinterpret_cast<float3*>(agentColorsGPU_),
@@ -266,14 +278,14 @@ void Simulation::updateTrailMap(double deltaTime, float diffuseWeight, float eva
 
     float diffuseDT = std::max(1.0f, static_cast<float>(diffuseWeight * deltaTime));
 
-    dim3 grid(width_ / 32, height_ / 32);
-    dim3 block(32, 32);
-    kl_updateTrailMap(grid, block,
+    kl_updateTrailMap(gridI_, block_,
         reinterpret_cast<float4*>(trailMapFront_),
         reinterpret_cast<float4*>(trailMapBack_),
         relativeIdxsGPUptr_,
         diffuseDT,
         evaporateWeight * deltaTime,
+        width_,
+        height_,
         padWidth_,
         padOffset_
     );
@@ -353,12 +365,12 @@ void Simulation::spawnAgents(unsigned int newAgents, float* agentShares, StartFo
     if (agentRandomState_ == nullptr)
     {
         this->checkCudaError(
-            cudaMalloc(&agentRandomState_, 32 * sizeof(curandState)),
+            cudaMalloc(&agentRandomState_, BLOCK_SIZE * sizeof(curandState)),
             "cudaMalloc agentRandomState_"
         );
     }
     dim3 grid(1, 1);
-    dim3 block(32, 1);
+    dim3 block(BLOCK_SIZE, 1);
     kl_initCurand32(grid, block, agentRandomState_);
 }
 
@@ -478,8 +490,9 @@ void Simulation::updateAgentConfig()
 void Simulation::updateAgents(double deltaTime, float trailWeight)
 {
     REQUIRE_CUDA
-    dim3 grid(std::ceil(nAgents_ / 32.0), 1);
-    dim3 block(32, 1);
+    dim3 block(BLOCK_SIZE, 1);
+    dim3 grid(std::ceil(nAgents_ / BLOCK_SIZE_F), 1);
+
     kl_updateAgents(grid, block,
         deltaTime,
         agentRandomState_,
