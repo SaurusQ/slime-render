@@ -4,13 +4,20 @@
 
 #include <inttypes.h>
 
-#if 1
+//#define K4
+#define QHD
+//#define FHD
+
+#ifdef K4
 constexpr unsigned int IMG_W_CONFIG = 3840;
 constexpr unsigned int IMG_H_CONFIG = 2160;
-#elif 0
+#elif defined(QHD)
 constexpr unsigned int IMG_W_CONFIG = 2560;
 constexpr unsigned int IMG_H_CONFIG = 1440;
-#else
+#elif defined(FHD)
+constexpr unsigned int IMG_W_CONFIG = 1920;
+constexpr unsigned int IMG_H_CONFIG = 1080;
+#else 
 constexpr unsigned int IMG_W_CONFIG = 320;
 constexpr unsigned int IMG_H_CONFIG = 180;
 #endif
