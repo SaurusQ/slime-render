@@ -365,12 +365,12 @@ void Simulation::spawnAgents(unsigned int newAgents, float* agentShares, StartFo
     if (agentRandomState_ == nullptr)
     {
         this->checkCudaError(
-            cudaMalloc(&agentRandomState_, BLOCK_SIZE * sizeof(curandState)),
+            cudaMalloc(&agentRandomState_, BLOCK_SIZE_AGENT * sizeof(curandState)),
             "cudaMalloc agentRandomState_"
         );
     }
     dim3 grid(1, 1);
-    dim3 block(BLOCK_SIZE, 1);
+    dim3 block(BLOCK_SIZE_AGENT, 1);
     kl_initCurand32(grid, block, agentRandomState_);
 }
 
@@ -490,8 +490,8 @@ void Simulation::updateAgentConfig()
 void Simulation::updateAgents(double deltaTime, float trailWeight)
 {
     REQUIRE_CUDA
-    dim3 block(BLOCK_SIZE, 1);
-    dim3 grid(std::ceil(nAgents_ / BLOCK_SIZE_F), 1);
+    dim3 block(BLOCK_SIZE_AGENT, 1);
+    dim3 grid(std::ceil(nAgents_ / BLOCK_SIZE_AGENT_F), 1);
 
     kl_updateAgents(grid, block,
         deltaTime,

@@ -97,7 +97,7 @@ __global__ void k_updateAgents(
     unsigned int padOffset
 )
 {
-    int agentIdx = blockIdx.x * BLOCK_SIZE + threadIdx.x;
+    int agentIdx = blockIdx.x * BLOCK_SIZE_AGENT + threadIdx.x;
     if (agentIdx >= nAgents) return;
     Agent* agent = agents + agentIdx;
     

@@ -18,6 +18,9 @@ constexpr unsigned int IMG_H_CONFIG = 180;
 #define BLOCK_SIZE 32
 #define BLOCK_SIZE_F static_cast<float>(BLOCK_SIZE)
 
+#define BLOCK_SIZE_AGENT 256
+#define BLOCK_SIZE_AGENT_F static_cast<float>(BLOCK_SIZE_AGENT)
+
 #define DIFFERENT_SPECIES 4
 
 constexpr const char* agentNames[] = {"X", "Y", "Z", "W"};
