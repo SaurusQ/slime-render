@@ -137,7 +137,8 @@ __global__ void k_updateAgents(
     {
         newPos.x = fminf(width - 0.01, fmaxf(0.0, newPos.x));
         newPos.y = fminf(heigth - 0.01, fmaxf(0.0, newPos.y));
-        agent->angle = curand_uniform(randomState + threadIdx.x) * 2 * PI;
+        agent->angle += PI; //curand_uniform(randomState + threadIdx.x) * 2 * PI;
+
     }
     else
     {
