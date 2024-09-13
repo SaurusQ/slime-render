@@ -71,6 +71,30 @@ void updateViewMatrix()
     glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 }
 
+void toggleFullscreen(GLFWwindow* wnd)
+{
+    static bool fullscreen = false;
+    static int windowedXPos, windowedYPos, windowedWidth, windowedHeight;
+    if (!fullscreen) {
+        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        
+        // Save the window's current position and size
+        glfwGetWindowPos(wnd, &windowedXPos, &windowedYPos);
+        glfwGetWindowSize(wnd, &windowedWidth, &windowedHeight);
+
+        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+        // Switch to fullscreen
+        glfwSetWindowMonitor(wnd, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+        fullscreen = true;
+    } else {
+        // Switch back to windowed mode
+        glfwSetWindowMonitor(wnd, nullptr, windowedXPos, windowedYPos, windowedWidth, windowedHeight, 0);
+        fullscreen = false;
+    }
+
+}
+
 void key_callback(GLFWwindow* wnd, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -83,8 +107,10 @@ void key_callback(GLFWwindow* wnd, int key, int scancode, int action, int mods)
         reader.next(simConfig);
     if (key == GLFW_KEY_O && action == GLFW_PRESS)
         reader.printOutConfig(simConfig);
-    if (key == GLFW_KEY_F && action == GLFW_PRESS)
+    if (key == GLFW_KEY_R && action == GLFW_PRESS)
         showFps = !showFps;
+    if (key == GLFW_KEY_F && action == GLFW_PRESS)
+        toggleFullscreen(wnd);
     if (key == GLFW_KEY_S && action == GLFW_PRESS)
         takeScreenshot = true;
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)

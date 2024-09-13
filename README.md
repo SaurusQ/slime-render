@@ -31,13 +31,14 @@ To complile this program you need to:
 
 ## Controls
 
-| **Key** | **Action**                         |
+| **Key** | **Action**                          |
 |---------|-------------------------------------|
 | ESC     | Close the program                   |
 | C       | Run/Stop the simulation             |
 | M       | Show configuration UI               |
 | S       | Export the image to PNG             |
-| F       | Show FPS                            |
+| R       | Show FPS                            |
+| F       | Toggle fullscreen mode              |
 | N       | Set next configuration from config file |
 | O		  | Print out the current config to json |
 
