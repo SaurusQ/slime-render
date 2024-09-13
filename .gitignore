@@ -5,6 +5,7 @@ imgui.ini
 config.json
 *.png
 !slime.png
+*.webm
 
 lib/*
 !lib/json.hpp

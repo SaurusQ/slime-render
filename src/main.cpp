@@ -132,23 +132,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-/*void fpsHandler(double cur, GLFWwindow* window)
-{
-    static unsigned int nFrames = 0;
-    static double last = glfwGetTime();
-    nFrames++;
-    if(cur > (last + 1.0))
-    {
-        float fps = nFrames;
-        last += 1.0;
-
-        std::stringstream ss;
-        ss << wndName << " " << fps;
-        glfwSetWindowTitle(window, ss.str().c_str());
-        nFrames = 0;
-    }
-}*/
-
 int main(int argc, char** argv)
 {
     std::string configJson = "config.json";
@@ -249,8 +232,8 @@ int main(int argc, char** argv)
     {
         lastTime = currentTime;
         currentTime = glfwGetTime();
-        deltaTime = currentTime - lastTime;
-        //fpsHandler(currentTime, window);
+        if (simConfig.fixedStep) deltaTime = 1.0f;
+        else deltaTime = currentTime - lastTime;
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

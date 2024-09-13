@@ -35,8 +35,8 @@ bool ConfigReader::readConfig(std::string filepath)
     // Set defaults
     for (int i = 0; i < DIFFERENT_SPECIES; i++)
     {
-        sc.aConfigs[i].speed                = 100.0f;
-        sc.aConfigs[i].turnSpeed            = 200.0f;
+        sc.aConfigs[i].speed                = 1.0f;
+        sc.aConfigs[i].turnSpeed            = 45.0f;
         sc.aConfigs[i].sensorAngleSpacing   = 22.5f;
         sc.aConfigs[i].sensorOffsetDst      = 9.0f;
         sc.aConfigs[i].sensorSize           = 0;
@@ -50,9 +50,10 @@ bool ConfigReader::readConfig(std::string filepath)
     sc.agentShare[0] = 1.0f;
 
     sc.numAgents    = 1000;
-    sc.evaporate    = 0.02f;
-    sc.diffuse      = 1.0f;
-    sc.trailWeight  = 1.0f;
+    sc.evaporate    = 0.01f;
+    sc.diffuse      = 0.1f;
+    sc.trailWeight  = 5.0f;
+    sc.fixedStep    = true;
     
     sc.updateAgents = true;
     sc.clearOnSpawn = true;
@@ -119,6 +120,7 @@ bool ConfigReader::readConfig(std::string filepath)
             if (trail.contains("evaporate"))    sc.evaporate    = trail["evaporate"].get<float>();
             if (trail.contains("diffuse"))      sc.diffuse      = trail["diffuse"].get<float>();
             if (trail.contains("trail_weight")) sc.trailWeight  = trail["trail_weight"].get<float>();
+            if (trail.contains("fixed_step"))   sc.fixedStep    = trail["fixed_step"].get<bool>();
         }
         configsF_[frame] = sc;
         auto it = configsF_.find(0);
@@ -153,6 +155,7 @@ bool ConfigReader::next(SimConfig& sc)
             sc.evaporate    = scu.evaporate;
             sc.diffuse      = scu.diffuse;
             sc.trailWeight  = scu.trailWeight;
+            sc.fixedStep    = scu.fixedStep;
 
             // Force update agents on
             sc.updateAgents = true;
@@ -201,7 +204,8 @@ void ConfigReader::printOutConfig(const SimConfig& sc)
     jsonObj["trail"] = {
         {"evaporate", sc.evaporate},
         {"diffuse", sc.diffuse},
-        {"trail_weight", sc.trailWeight}
+        {"trail_weight", sc.trailWeight},
+        {"fixed_step", sc.fixedStep}
     };
 
     json jsonRes = {{"simconfig", json::array()}};
@@ -247,8 +251,10 @@ void ConfigReader::printOutConsole(const SimConfig& config)
     std::cout << "  Evaporate: " << config.evaporate << std::endl;
     std::cout << "  Diffuse: " << config.diffuse << std::endl;
     std::cout << "  Trail Weight: " << config.trailWeight << std::endl;
+    std::cout << "  Fixed Step: " << (config.fixedStep ? "true" : "false") << std::endl;
     std::cout << "  Update Agents: " << (config.updateAgents ? "true" : "false") << std::endl;
     std::cout << "  Clear On Spawn: " << (config.clearOnSpawn ? "true" : "false") << std::endl;
+    
 
     // Print start formation (example output)
     std::cout << "  Start Formation: ";

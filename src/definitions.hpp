@@ -90,6 +90,7 @@ struct SimConfig
     float trailWeight;
     bool updateAgents;
     bool clearOnSpawn;
+    bool fixedStep;
     StartFormation startFormation;
 };
 

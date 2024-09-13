@@ -276,7 +276,7 @@ void Simulation::updateTrailMap(double deltaTime, float diffuseWeight, float eva
         );
     }
 
-    float diffuseDT = std::max(1.0f, static_cast<float>(diffuseWeight * deltaTime));
+    float diffuseDT = std::min(1.0f, static_cast<float>(diffuseWeight * deltaTime));
 
     kl_updateTrailMap(gridI_, block_,
         reinterpret_cast<float4*>(trailMapFront_),

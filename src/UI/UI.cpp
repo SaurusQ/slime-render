@@ -112,6 +112,7 @@ void UI::updateConfig(SimConfig& sc, SimUpdate& su)
         if(ImGui::Button("RCircle")) { sc.startFormation = StartFormation::RANDOM_CIRCLE; su.spawn = true; }
 
         ImGui::Checkbox("Clear on spawn", &sc.clearOnSpawn);
+        ImGui::Checkbox("Fixed step", &sc.fixedStep);
 
         ImGui::End();
     }
