@@ -115,7 +115,7 @@ __global__ void k_updateAgents(
 
     if (wf > wl && wf > wr)
     {
-        agent->angle += 0;
+        agent->angle +=  0; //(randomSteer - 0.5) * 0.01;
     }
     else if (wf < wl && wf < wr)
     {
@@ -137,7 +137,8 @@ __global__ void k_updateAgents(
     {
         newPos.x = fminf(width - 0.01, fmaxf(0.0, newPos.x));
         newPos.y = fminf(heigth - 0.01, fmaxf(0.0, newPos.y));
-        agent->angle += PI; //curand_uniform(randomState + threadIdx.x) * 2 * PI;
+        //agent->angle += PI;
+        agent->angle = curand_uniform(randomState + threadIdx.x) * 2 * PI;
 
     }
     else
