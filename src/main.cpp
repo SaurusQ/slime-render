@@ -23,6 +23,8 @@
 ConfigReader reader;
 SimConfig simConfig;
 Simulation* pSimulation;
+SimUpdate simUpdate{false, false, false, false, false};
+
 
 bool showUI = false;
 bool showFps = false;
@@ -103,8 +105,12 @@ void key_callback(GLFWwindow* wnd, int key, int scancode, int action, int mods)
         showUI = !showUI;
     if (key == GLFW_KEY_C && action == GLFW_PRESS)
         simConfig.updateAgents = !simConfig.updateAgents;
-    if (key == GLFW_KEY_N && action == GLFW_PRESS)
+    if (key == GLFW_KEY_N && action == GLFW_PRESS) {
         reader.next(simConfig);
+        simUpdate.agentSettings = true;
+        simUpdate.population = true;
+        simUpdate.populationShare = true;
+    }
     if (key == GLFW_KEY_O && action == GLFW_PRESS)
         reader.printOutConfig(simConfig);
     if (key == GLFW_KEY_R && action == GLFW_PRESS)
@@ -251,7 +257,6 @@ int main(int argc, char** argv)
     double lastTime = currentTime;
     double deltaTime;
 
-    SimUpdate simUpdate{false, false, false, false, false};
     simUpdate.spawn = true;
 
     while (!glfwWindowShouldClose(window))

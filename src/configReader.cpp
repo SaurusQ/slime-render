@@ -161,6 +161,7 @@ bool ConfigReader::next(SimConfig& sc)
             sc.updateAgents = true;
         }
         currentFrame_++;
+        currentFrame_ %= endFrame_ + 1;
     }
     return end;
 }
