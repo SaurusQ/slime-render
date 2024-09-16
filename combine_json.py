@@ -1,25 +1,33 @@
 import os
 import json
+import argparse
 
-# Define the folder path that contains the JSON files
-folder_path = './configs/'
+parser = argparse.ArgumentParser(description="Combine simconfig JSON files and optionally increment frame numbers.")
+parser.add_argument("folder_path", type=str, help="Folder path that contains the JSON files")
+parser.add_argument("-i", "--increment-frame", action="store_true", help="Increment the frame numbers in the combined output")
+args = parser.parse_args()
+
+folder_path = args.folder_path
 combined_simconfig = []
+frame_counter = 0
+files = sorted(os.listdir(folder_path))
 
-# Loop through all the files in the folder
-for filename in os.listdir(folder_path):
+for filename in files:
     if filename.endswith('.json'):
         file_path = os.path.join(folder_path, filename)
         
-        # Open and read each JSON file
         with open(file_path, 'r') as json_file:
             data = json.load(json_file)
             
-            # Append the "simconfig" content to the combined list
-            combined_simconfig.extend(data.get('simconfig', []))
+            # Iterate through the simconfig items and update the frame if needed
+            for config in data.get('simconfig', []):
+                if args.increment_frame:
+                    config['frame'] = frame_counter
+                    frame_counter += 1
+                combined_simconfig.append(config)
 
-# Save the combined "simconfig" into a new JSON file
 combined_data = {'simconfig': combined_simconfig}
-output_file = os.path.join(folder_path, 'combined_simconfig.json')
+output_file = 'combined_simconfig.json'
 
 with open(output_file, 'w') as outfile:
     json.dump(combined_data, outfile, indent=4)
