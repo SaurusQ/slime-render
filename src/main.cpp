@@ -119,7 +119,7 @@ void key_callback(GLFWwindow* wnd, int key, int scancode, int action, int mods)
         toggleFullscreen(wnd);
     if (key == GLFW_KEY_S && action == GLFW_PRESS)
         takeScreenshot = true;
-    if (key == GLFW_KEY_V && action == GLFW_PRESS)
+    if (key == GLFW_KEY_Z && action == GLFW_PRESS)
     {
         simConfig.startFormation = StartFormation::CIRCLE;
         simUpdate.spawn = true;

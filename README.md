@@ -40,6 +40,7 @@ To complile this program you need to:
 | R       | Show FPS                            |
 | F       | Toggle fullscreen mode              |
 | N       | Set next configuration from config file |
-| O		  | Print out the current config to json |
+| O		  | Print out the current config to json    |
+| Z		  | Spawn agents in circle                  |
 
 The program takes a ``json`` file name as the first parameter, that configures all of the simulation parameters. You can see the structure of the file by printing the config out with ``O``. The ``json`` contains a list of configs that can be cycled with ``N``.
